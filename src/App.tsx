@@ -21,6 +21,26 @@ import Events from './pages/Events';
 import Directory from './pages/Directory';
 import Mentorship from './pages/Mentorship';
 import Jobs from './pages/Jobs';
+import InnovationHub from './pages/InnovationHub';
+import Forum from './components/forum/Forum';
+
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen bg-gray-50">
+    <Navigation />
+    <main className="pt-16">
+      {children}
+    </main>
+  </div>
+);
+
+const PublicLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen bg-gray-50">
+    <Navigation />
+    <main className="pt-16">
+      {children}
+    </main>
+  </div>
+);
 
 function App() {
   return (
@@ -32,153 +52,119 @@ function App() {
           <Route
             path="/login"
             element={
-              <div className="min-h-screen bg-gray-50">
-                <Navigation />
-                <main className="pt-16">
-                  <LoginForm />
-                </main>
-              </div>
+              <PublicLayout>
+                <LoginForm />
+              </PublicLayout>
             }
           />
           <Route
             path="/register"
             element={
-              <div className="min-h-screen bg-gray-50">
-                <Navigation />
-                <main className="pt-16">
-                  <RegistrationForm />
-                </main>
-              </div>
+              <PublicLayout>
+                <RegistrationForm />
+              </PublicLayout>
             }
           />
           <Route
             path="/forgot-password"
             element={
-              <div className="min-h-screen bg-gray-50">
-                <Navigation />
-                <main className="pt-16">
-                  <PasswordRecovery />
-                </main>
-              </div>
+              <PublicLayout>
+                <PasswordRecovery />
+              </PublicLayout>
             }
           />
           <Route
             path="/get-started"
             element={
-              <div className="min-h-screen bg-gray-50">
-                <Navigation />
-                <main className="pt-16">
-                  <GetStarted />
-                </main>
-              </div>
+              <PublicLayout>
+                <GetStarted />
+              </PublicLayout>
             }
           />
 
           {/* Protected routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Home />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Profile />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/events"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Events />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/directory"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Directory />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mentorship"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Mentorship />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/jobs"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Jobs />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/career"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <Career />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/skill-trade"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-gray-50">
-                  <Navigation />
-                  <main className="pt-16">
-                    <SkillTrade />
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/"
+              element={
+                <ProtectedLayout>
+                  <Home />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedLayout>
+                  <Profile />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/events"
+              element={
+                <ProtectedLayout>
+                  <Events />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/directory"
+              element={
+                <ProtectedLayout>
+                  <Directory />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/mentorship"
+              element={
+                <ProtectedLayout>
+                  <Mentorship />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/jobs"
+              element={
+                <ProtectedLayout>
+                  <Jobs />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/career"
+              element={
+                <ProtectedLayout>
+                  <Career />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/skill-trade"
+              element={
+                <ProtectedLayout>
+                  <SkillTrade />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/innovation"
+              element={
+                <ProtectedLayout>
+                  <InnovationHub />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/forum"
+              element={
+                <ProtectedLayout>
+                  <Forum />
+                </ProtectedLayout>
+              }
+            />
+          </Route>
 
           {/* Redirect unmatched routes to landing */}
           <Route path="*" element={<Navigate to="/landing" replace />} />

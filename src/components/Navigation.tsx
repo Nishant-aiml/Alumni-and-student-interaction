@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, Menu, X, GraduationCap, LogOut, Briefcase, ArrowRightLeft } from 'lucide-react';
+import {
+  Search,
+  Bell,
+  User,
+  Menu,
+  X,
+  GraduationCap,
+  LogOut,
+  Briefcase,
+  ArrowRightLeft,
+  Lightbulb,
+  Sparkles,
+  MessageSquare,
+} from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,6 +48,8 @@ export default function Navigation() {
     { name: 'Jobs', href: '/jobs', icon: Briefcase },
     { name: 'Career', href: '/career', icon: Briefcase },
     { name: 'Skill Trade', href: '/skill-trade', icon: ArrowRightLeft },
+    { name: 'Innovation Hub', href: '/innovation', icon: Lightbulb },
+    { name: 'Forum', href: '/forum', icon: MessageSquare },
   ];
 
   // Show simplified navigation for auth pages
@@ -105,7 +120,19 @@ export default function Navigation() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/innovation"
+              className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium ${
+                isActive('/innovation')
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              } transition-colors duration-200`}
+            >
+              <Sparkles className="h-5 w-5 mr-1.5" />
+              Innovation Hub
+            </Link>
+
             <div className="flex-shrink-0">
               <div className="relative rounded-full text-gray-400 p-1 hover:text-gray-500">
                 <Search className="h-6 w-6" />
@@ -168,6 +195,19 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
+            <Link
+              to="/innovation"
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive('/innovation')
+                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center">
+                <Sparkles className="h-5 w-5 mr-1.5" />
+                Innovation Hub
+              </div>
+            </Link>
           </div>
         </div>
       )}
