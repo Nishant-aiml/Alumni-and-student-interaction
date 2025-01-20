@@ -14,6 +14,10 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ isInternship = false }) => {
+  const description = isInternship
+    ? "Join our dynamic team for a summer internship opportunity where you'll work on real-world projects using cutting-edge technologies. Mentorship and potential for full-time conversion available."
+    : "We are looking for a Senior Software Engineer to join our team and help build scalable solutions. You'll work with modern technologies and lead key initiatives.";
+
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="p-6">
@@ -74,9 +78,7 @@ const JobCard: React.FC<JobCardProps> = ({ isInternship = false }) => {
 
         <div className="mt-4">
           <div className="text-sm text-gray-500 line-clamp-2">
-            {isInternship
-              ? 'Join our dynamic team for a summer internship opportunity where you'll work on real-world projects using cutting-edge technologies. Mentorship and potential for full-time conversion available.'
-              : 'We are looking for a Senior Software Engineer to join our team and help build scalable solutions. You'll work with modern technologies and lead key initiatives.'}
+            {description}
           </div>
         </div>
 

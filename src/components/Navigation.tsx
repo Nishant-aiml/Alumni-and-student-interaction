@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, Menu, X, GraduationCap, LogOut } from 'lucide-react';
+import { Search, Bell, User, Menu, X, GraduationCap, LogOut, Briefcase, ArrowRightLeft } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -7,10 +7,10 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, currentUser } = useAuth();
 
   const handleLogoClick = () => {
-    navigate('/');
+    navigate(currentUser ? '/' : '/landing');
   };
 
   const handleLogout = async () => {
@@ -23,6 +23,56 @@ export default function Navigation() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/landing'].includes(
+    location.pathname
+  );
+
+  const navigation = [
+    { name: 'Home', href: '/', icon: GraduationCap },
+    { name: 'Events', href: '/events', icon: Search },
+    { name: 'Directory', href: '/directory', icon: User },
+    { name: 'Mentorship', href: '/mentorship', icon: Briefcase },
+    { name: 'Jobs', href: '/jobs', icon: Briefcase },
+    { name: 'Career', href: '/career', icon: Briefcase },
+    { name: 'Skill Trade', href: '/skill-trade', icon: ArrowRightLeft },
+  ];
+
+  // Show simplified navigation for auth pages
+  if (isAuthPage) {
+    return (
+      <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div
+              className="flex-shrink-0 flex items-center cursor-pointer"
+              onClick={() => navigate('/landing')}
+            >
+              <GraduationCap className="h-8 w-8 text-indigo-600" />
+              <span className="ml-2 text-2xl font-bold text-indigo-600">EduConnect</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              {location.pathname !== '/login' && (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 hover:text-indigo-500"
+                >
+                  Login
+                </Link>
+              )}
+              {location.pathname !== '/register' && (
+                <Link
+                  to="/register"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Register
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
@@ -35,49 +85,22 @@ export default function Navigation() {
               onClick={handleLogoClick}
             >
               <GraduationCap className="h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-2xl font-bold text-indigo-600">AlumNet</span>
+              <span className="ml-2 text-2xl font-bold text-indigo-600">EduConnect</span>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                to="/"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Home
-              </Link>
-              <Link
-                to="/events"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/events') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Events
-              </Link>
-              <Link
-                to="/directory"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/directory') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Directory
-              </Link>
-              <Link
-                to="/mentorship"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/mentorship') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Mentorship
-              </Link>
-              <Link
-                to="/jobs"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/jobs') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Jobs
-              </Link>
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive(item.href)
+                      ? 'border-indigo-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -105,12 +128,12 @@ export default function Navigation() {
               <div className="relative">
                 <img
                   className="h-8 w-8 rounded-full"
-                  src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=random`}
-                  alt={user?.firstName}
+                  src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.displayName}&background=random`}
+                  alt={currentUser?.displayName}
                 />
                 <span className="absolute -bottom-1 -right-1 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white" />
               </div>
-              <span className="ml-2 hidden md:block">{user?.firstName || 'Profile'}</span>
+              <span className="ml-2 hidden md:block">{currentUser?.displayName || 'Profile'}</span>
             </Link>
             <div className="ml-4 md:hidden">
               <button
@@ -132,56 +155,19 @@ export default function Navigation() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="pt-2 pb-3 space-y-1">
-            <Link
-              to="/"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/events"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/events')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              Events
-            </Link>
-            <Link
-              to="/directory"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/directory')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              Directory
-            </Link>
-            <Link
-              to="/mentorship"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/mentorship')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              Mentorship
-            </Link>
-            <Link
-              to="/jobs"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/jobs')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              Jobs
-            </Link>
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                  isActive(item.href)
+                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                    : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
           </div>
         </div>
       )}

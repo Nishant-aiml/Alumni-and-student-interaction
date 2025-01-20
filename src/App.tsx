@@ -1,18 +1,26 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
+import GetStarted from './pages/GetStarted';
+import Profile from './pages/Profile';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import Career from './pages/Career';
+import SkillTrade from './pages/SkillTrade';
+import LoginForm from './components/auth/LoginForm';
+import RegistrationForm from './components/auth/RegistrationForm';
+import PasswordRecovery from './components/auth/PasswordRecovery';
+import Landing from './pages/Landing';
 import Events from './pages/Events';
 import Directory from './pages/Directory';
 import Mentorship from './pages/Mentorship';
 import Jobs from './pages/Jobs';
-import GetStarted from './pages/GetStarted';
-import Landing from './pages/Landing';
-import LoginForm from './components/auth/LoginForm';
-import RegistrationForm from './components/auth/RegistrationForm';
-import PasswordRecovery from './components/auth/PasswordRecovery';
-import Profile from './pages/Profile';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   return (
@@ -20,12 +28,52 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/get-started" element={<GetStarted />} />
           <Route path="/landing" element={<Landing />} />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<RegistrationForm />} />
-          <Route path="/forgot-password" element={<PasswordRecovery />} />
-          
+          <Route
+            path="/login"
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <Navigation />
+                <main className="pt-16">
+                  <LoginForm />
+                </main>
+              </div>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <Navigation />
+                <main className="pt-16">
+                  <RegistrationForm />
+                </main>
+              </div>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <Navigation />
+                <main className="pt-16">
+                  <PasswordRecovery />
+                </main>
+              </div>
+            }
+          />
+          <Route
+            path="/get-started"
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <Navigation />
+                <main className="pt-16">
+                  <GetStarted />
+                </main>
+              </div>
+            }
+          />
+
           {/* Protected routes */}
           <Route
             path="/"
@@ -33,7 +81,7 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Home />
                   </main>
                 </div>
@@ -46,7 +94,7 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Profile />
                   </main>
                 </div>
@@ -59,7 +107,7 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Events />
                   </main>
                 </div>
@@ -72,7 +120,7 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Directory />
                   </main>
                 </div>
@@ -85,7 +133,7 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Mentorship />
                   </main>
                 </div>
@@ -98,16 +146,42 @@ function App() {
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
-                  <main>
+                  <main className="pt-16">
                     <Jobs />
                   </main>
                 </div>
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/career"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <main className="pt-16">
+                    <Career />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/skill-trade"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <main className="pt-16">
+                    <SkillTrade />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Redirect root to get-started for new users */}
-          <Route path="*" element={<Navigate to="/get-started" replace />} />
+          {/* Redirect unmatched routes to landing */}
+          <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
