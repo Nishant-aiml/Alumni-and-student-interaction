@@ -16,15 +16,14 @@ import SkillTrade from './pages/SkillTrade';
 import LoginForm from './components/auth/LoginForm';
 import RegistrationForm from './components/auth/RegistrationForm';
 import PasswordRecovery from './components/auth/PasswordRecovery';
-import Landing from './pages/Landing';
 import Events from './pages/Events';
 import Directory from './pages/Directory';
 import Mentorship from './pages/Mentorship';
-import Jobs from './pages/Jobs';
 import InnovationHub from './pages/InnovationHub';
 import Forum from './components/forum/Forum';
 import SuccessStories from './pages/SuccessStories';
 import Rewards from './pages/Rewards';
+import Jobs from './pages/Jobs';
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-gray-50">
@@ -50,7 +49,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/landing" element={<Landing />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route
             path="/login"
             element={
@@ -87,7 +86,7 @@ function App() {
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route
-              path="/"
+              path="/home"
               element={
                 <ProtectedLayout>
                   <Home />
@@ -184,8 +183,8 @@ function App() {
             />
           </Route>
 
-          {/* Redirect unmatched routes to landing */}
-          <Route path="*" element={<Navigate to="/landing" replace />} />
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

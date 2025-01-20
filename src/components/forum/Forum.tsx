@@ -1,45 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
-  Container,
-  Typography,
   Tabs,
   Tab,
+  Typography,
+  Container,
   Paper,
-  Button,
-  Stack,
-  Chip,
-  IconButton,
-  Badge,
   useTheme,
+  useMediaQuery,
+  IconButton,
+  Stack,
+  Button,
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import {
-  Building2,
-  GraduationCap,
-  Code2,
-  Rocket,
-  Users,
   MessageSquare,
   HelpCircle,
   Share2,
   Hash,
   TrendingUp,
-  Zap,
-  BookOpen,
 } from 'lucide-react';
-import { styled } from '@mui/material/styles';
-
-// Import all required components
 import IndustryForums from './IndustryForums';
-import CareerAdvice from './CareerAdvice';
-import TechnicalDiscussions from './TechnicalDiscussions';
-import StartupCorner from './StartupCorner';
-import AlumniExperiences from './AlumniExperiences';
-import LiveDiscussions from './LiveDiscussions';
-import ExpertQA from './ExpertQA';
-import ResourceSharing from './ResourceSharing';
 import TopicTracking from './TopicTracking';
-import TrendingDiscussions from './TrendingDiscussions';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -49,18 +31,24 @@ interface TabPanelProps {
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   backgroundColor: '#6B5B95',
-  borderRadius: '12px 12px 0 0',
+  borderRadius: theme.breakpoints.down('sm') ? '8px 8px 0 0' : '12px 12px 0 0',
   '& .MuiTabs-indicator': {
     backgroundColor: '#FFB6C1',
     height: '3px',
+  },
+  '& .MuiTabs-scrollButtons': {
+    '&.Mui-disabled': {
+      opacity: 0.3,
+    },
   },
 }));
 
 const StyledTab = styled(Tab)(({ theme }) => ({
   color: 'rgba(255, 255, 255, 0.7)',
   fontWeight: 600,
-  fontSize: '1rem',
+  fontSize: theme.breakpoints.down('sm') ? '0.875rem' : '1rem',
   textTransform: 'none',
+  minHeight: theme.breakpoints.down('sm') ? 48 : 56,
   '&.Mui-selected': {
     color: '#ffffff',
   },
@@ -70,21 +58,24 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-const GradientBackground = styled(Box)({
+const GradientBackground = styled(Box)(({ theme }) => ({
   background: 'linear-gradient(135deg, #6B5B95 0%, #FF6B6B 100%)',
-  padding: '2rem 0',
+  padding: theme.breakpoints.down('sm') ? '1rem 0' : '2rem 0',
   minHeight: '100vh',
-});
+}));
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  borderRadius: '12px',
+  borderRadius: theme.breakpoints.down('sm') ? '8px' : '12px',
   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
   overflow: 'hidden',
+  margin: theme.breakpoints.down('sm') ? '0 8px' : 0,
 }));
 
 const TabPanel = (props: TabPanelProps) => {
   const { children, value, index, ...other } = props;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <div
@@ -95,7 +86,7 @@ const TabPanel = (props: TabPanelProps) => {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: isMobile ? 2 : 3 }}>
           {children}
         </Box>
       )}
@@ -103,44 +94,45 @@ const TabPanel = (props: TabPanelProps) => {
   );
 };
 
-const Forum: React.FC = () => {
+const Forum = () => {
+  const [value, setValue] = React.useState(0);
   const theme = useTheme();
-  const [value, setValue] = useState(0);
-  const [activeDiscussions] = useState(15);
-  const [onlineExperts] = useState(8);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   return (
     <GradientBackground>
-      <Container maxWidth="lg" sx={{ pt: 8 }}>
-        <Box sx={{ mb: 4 }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 4, sm: 8 } }}>
+        <Box sx={{ mb: { xs: 2, sm: 4 } }}>
           <Typography
-            variant="h3"
+            variant={isMobile ? 'h4' : 'h3'}
             component="h1"
             sx={{
               color: '#ffffff',
               fontWeight: 700,
               textAlign: 'center',
               textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
-              mb: 2,
+              mb: { xs: 1, sm: 2 },
+              px: { xs: 2, sm: 0 },
             }}
           >
             Community Forum
           </Typography>
           <Typography
-            variant="h6"
+            variant={isMobile ? 'body1' : 'h6'}
             sx={{
               color: 'rgba(255,255,255,0.9)',
               textAlign: 'center',
               maxWidth: '800px',
               margin: '0 auto',
               textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+              px: { xs: 2, sm: 0 },
             }}
           >
-            Connect, Share, and Learn with the Community
+            Connect, Share, and Learn with Fellow Tech Enthusiasts
           </Typography>
         </Box>
 
@@ -150,167 +142,109 @@ const Forum: React.FC = () => {
             onChange={handleChange}
             variant="scrollable"
             scrollButtons="auto"
+            allowScrollButtonsMobile
             aria-label="forum sections"
           >
-            <StyledTab icon={<Building2 size={18} />} iconPosition="start" label="Industry Forums" />
-            <StyledTab icon={<GraduationCap size={18} />} iconPosition="start" label="Career Advice" />
-            <StyledTab icon={<Code2 size={18} />} iconPosition="start" label="Technical Discussions" />
-            <StyledTab icon={<Rocket size={18} />} iconPosition="start" label="Startup Corner" />
-            <StyledTab icon={<Users size={18} />} iconPosition="start" label="Alumni Experiences" />
-            <StyledTab icon={<MessageSquare size={18} />} iconPosition="start" label="Live Discussions" />
-            <StyledTab icon={<HelpCircle size={18} />} iconPosition="start" label="Expert Q&A" />
-            <StyledTab icon={<BookOpen size={18} />} iconPosition="start" label="Resource Sharing" />
-            <StyledTab icon={<Hash size={18} />} iconPosition="start" label="Topic Tracking" />
-            <StyledTab icon={<TrendingUp size={18} />} iconPosition="start" label="Trending" />
+            <StyledTab label="Industry" />
+            <StyledTab label="Topics" />
+            <StyledTab label="Career" />
+            <StyledTab label="Technical" />
           </StyledTabs>
 
           <TabPanel value={value} index={0}>
             <IndustryForums />
           </TabPanel>
           <TabPanel value={value} index={1}>
-            <CareerAdvice />
-          </TabPanel>
-          <TabPanel value={value} index={2}>
-            <TechnicalDiscussions />
-          </TabPanel>
-          <TabPanel value={value} index={3}>
-            <StartupCorner />
-          </TabPanel>
-          <TabPanel value={value} index={4}>
-            <AlumniExperiences />
-          </TabPanel>
-          <TabPanel value={value} index={5}>
-            <LiveDiscussions />
-          </TabPanel>
-          <TabPanel value={value} index={6}>
-            <ExpertQA />
-          </TabPanel>
-          <TabPanel value={value} index={7}>
-            <ResourceSharing />
-          </TabPanel>
-          <TabPanel value={value} index={8}>
             <TopicTracking />
           </TabPanel>
-          <TabPanel value={value} index={9}>
-            <TrendingDiscussions />
+          <TabPanel value={value} index={2}>
+            <Typography variant="h5" sx={{ color: '#6B5B95', fontWeight: 600, mb: 3 }}>
+              Career Advice
+            </Typography>
+            {/* Career Advice content will go here */}
+          </TabPanel>
+          <TabPanel value={value} index={3}>
+            <Typography variant="h5" sx={{ color: '#6B5B95', fontWeight: 600, mb: 3 }}>
+              Technical Discussions
+            </Typography>
+            {/* Technical Discussions content will go here */}
           </TabPanel>
         </StyledPaper>
 
-        {/* Quick Access Features */}
+        {/* Quick Action Buttons - Mobile Optimized */}
         <Stack
-          direction="row"
-          spacing={2}
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={{ xs: 1, sm: 2 }}
           sx={{
-            mb: 4,
-            overflowX: 'auto',
-            pb: 1,
-            '&::-webkit-scrollbar': {
-              height: 8,
-            },
-            '&::-webkit-scrollbar-track': {
-              bgcolor: 'rgba(0,0,0,0.05)',
-              borderRadius: 4,
-            },
-            '&::-webkit-scrollbar-thumb': {
-              bgcolor: 'rgba(0,0,0,0.2)',
-              borderRadius: 4,
-            },
+            mt: 2,
+            px: { xs: 2, sm: 0 },
           }}
         >
           <Button
+            fullWidth={isMobile}
             variant="contained"
             startIcon={<MessageSquare size={18} />}
             sx={{
               bgcolor: '#4ECDC4',
               '&:hover': { bgcolor: '#45B7D1' },
-              borderRadius: '12px',
-              px: 3,
+              borderRadius: '8px',
+              py: isMobile ? 1.5 : 1,
             }}
           >
             Start Discussion
           </Button>
           <Button
+            fullWidth={isMobile}
             variant="outlined"
             startIcon={<HelpCircle size={18} />}
-            sx={{ borderRadius: '12px', px: 3 }}
+            sx={{ borderRadius: '8px', py: isMobile ? 1.5 : 1 }}
           >
             Ask Question
           </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Share2 size={18} />}
-            sx={{ borderRadius: '12px', px: 3 }}
-          >
-            Share Resource
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Hash size={18} />}
-            sx={{ borderRadius: '12px', px: 3 }}
-          >
-            Browse Topics
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<TrendingUp size={18} />}
-            sx={{ borderRadius: '12px', px: 3 }}
-          >
-            Trending Now
-          </Button>
+          {!isMobile && (
+            <>
+              <Button
+                variant="outlined"
+                startIcon={<Share2 size={18} />}
+                sx={{ borderRadius: '8px' }}
+              >
+                Share Resource
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Hash size={18} />}
+                sx={{ borderRadius: '8px' }}
+              >
+                Browse Topics
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<TrendingUp size={18} />}
+                sx={{ borderRadius: '8px' }}
+              >
+                Trending Now
+              </Button>
+            </>
+          )}
         </Stack>
 
-        {/* Forum Header */}
-        <Paper
-          sx={{
-            p: 4,
-            mb: 4,
-            background: 'linear-gradient(135deg, #6B5B95 0%, #FF6B6B 100%)',
-            color: 'white',
-            borderRadius: '20px',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%)',
-            }
-          }}
-        >
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Box>
-              <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-                Community Forum
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Connect, Share, and Learn with the Community
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={2}>
-              <Chip
-                icon={<Zap size={16} />}
-                label={`${activeDiscussions} Active Discussions`}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.15)',
-                  color: 'white',
-                  '& .MuiChip-icon': { color: '#FFD700' },
-                }}
-              />
-              <Chip
-                icon={<Users size={16} />}
-                label={`${onlineExperts} Experts Online`}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.15)',
-                  color: 'white',
-                  '& .MuiChip-icon': { color: '#4ECDC4' },
-                }}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
+        {/* Mobile Action Buttons */}
+        {isMobile && (
+          <Box sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 10 }}>
+            <IconButton
+              sx={{
+                bgcolor: '#6B5B95',
+                color: 'white',
+                '&:hover': { bgcolor: '#5A4A84' },
+                width: 56,
+                height: 56,
+                boxShadow: 3,
+              }}
+            >
+              <MessageSquare />
+            </IconButton>
+          </Box>
+        )}
       </Container>
     </GradientBackground>
   );

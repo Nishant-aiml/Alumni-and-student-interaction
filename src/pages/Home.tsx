@@ -1,14 +1,12 @@
 import React from 'react';
 import WelcomeHero from '../components/WelcomeHero';
-import FeaturedContent from '../components/FeaturedContent';
-import FeaturedStories from '../components/FeaturedStories';
+import FeaturedAlumni from '../components/FeaturedAlumni';
 
 const Home = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <WelcomeHero />
-      <FeaturedContent />
-      <FeaturedStories />
+      <FeaturedAlumni />
     </div>
   );
 };
