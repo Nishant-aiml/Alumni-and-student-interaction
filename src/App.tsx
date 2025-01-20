@@ -23,6 +23,8 @@ import Mentorship from './pages/Mentorship';
 import Jobs from './pages/Jobs';
 import InnovationHub from './pages/InnovationHub';
 import Forum from './components/forum/Forum';
+import SuccessStories from './pages/SuccessStories';
+import Rewards from './pages/Rewards';
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-gray-50">
@@ -161,6 +163,22 @@ function App() {
               element={
                 <ProtectedLayout>
                   <Forum />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/success-stories"
+              element={
+                <ProtectedLayout>
+                  <SuccessStories />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/rewards"
+              element={
+                <ProtectedLayout>
+                  <Rewards />
                 </ProtectedLayout>
               }
             />

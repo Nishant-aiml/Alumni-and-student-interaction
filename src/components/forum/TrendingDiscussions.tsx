@@ -1,150 +1,210 @@
 import React from 'react';
 import {
   Box,
+  Card,
+  CardContent,
   Typography,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
+  Stack,
   Chip,
   IconButton,
+  Avatar,
+  Grid,
+  LinearProgress,
 } from '@mui/material';
 import {
   TrendingUp,
   MessageCircle,
   Eye,
   ThumbsUp,
+  Share2,
+  Clock,
 } from 'lucide-react';
 
 interface TrendingTopic {
   id: number;
   title: string;
+  description: string;
   category: string;
-  author: string;
-  timestamp: string;
   views: number;
-  replies: number;
+  comments: number;
   likes: number;
-  trending: number;
+  shares: number;
+  timeAgo: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  engagement: number;
 }
 
-const TrendingDiscussions: React.FC = () => {
-  const trendingTopics: TrendingTopic[] = [
-    {
-      id: 1,
-      title: "The Impact of AI on Future Job Markets",
-      category: "Career advice",
-      author: "Industry Expert",
-      timestamp: "2 hours ago",
-      views: 1234,
-      replies: 89,
-      likes: 345,
-      trending: 95
+const trendingTopics: TrendingTopic[] = [
+  {
+    id: 1,
+    title: "Latest AI Breakthroughs in Industry",
+    description: "Discussion about recent developments in AI and their impact on various industries.",
+    category: "Industry",
+    views: 1200,
+    comments: 45,
+    likes: 230,
+    shares: 28,
+    timeAgo: "2h ago",
+    author: {
+      name: "Sarah Chen",
+      avatar: "https://i.pravatar.cc/150?img=1",
     },
-    {
-      id: 2,
-      title: "Latest Developments in Quantum Computing",
-      category: "Technical discussions",
-      author: "Tech Researcher",
-      timestamp: "4 hours ago",
-      views: 987,
-      replies: 56,
-      likes: 234,
-      trending: 87
+    engagement: 85,
+  },
+  {
+    id: 2,
+    title: "Career Transition Success Stories",
+    description: "Members sharing their experiences of successful career transitions.",
+    category: "Career",
+    views: 980,
+    comments: 32,
+    likes: 185,
+    shares: 15,
+    timeAgo: "4h ago",
+    author: {
+      name: "Mike Johnson",
+      avatar: "https://i.pravatar.cc/150?img=2",
     },
-    {
-      id: 3,
-      title: "Successful Tech Startup Stories",
-      category: "Startup corner",
-      author: "Entrepreneur",
-      timestamp: "6 hours ago",
-      views: 756,
-      replies: 45,
-      likes: 178,
-      trending: 82
-    }
-  ];
+    engagement: 75,
+  },
+  {
+    id: 3,
+    title: "Emerging Tech Stack 2025",
+    description: "Discussion about the most in-demand technical skills for 2025.",
+    category: "Technical",
+    views: 850,
+    comments: 28,
+    likes: 160,
+    shares: 22,
+    timeAgo: "6h ago",
+    author: {
+      name: "Alex Kumar",
+      avatar: "https://i.pravatar.cc/150?img=3",
+    },
+    engagement: 70,
+  },
+];
 
+const TrendingDiscussions: React.FC = () => {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Trending Discussions
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5" fontWeight={600}>
+          Trending Discussions
+        </Typography>
+        <Chip
+          icon={<TrendingUp size={16} />}
+          label="Real-time updates"
+          color="primary"
+          sx={{ bgcolor: '#6B5B95', color: 'white' }}
+        />
+      </Stack>
 
-      <List>
+      <Grid container spacing={3}>
         {trendingTopics.map((topic) => (
-          <Paper
-            key={topic.id}
-            sx={{
-              mb: 2,
-              p: 2,
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'translateX(8px)'
-              }
-            }}
-          >
-            <ListItem
-              disableGutters
-              secondaryAction={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <IconButton size="small">
-                    <Eye />
-                  </IconButton>
-                  <Typography variant="caption">{topic.views}</Typography>
-                  <IconButton size="small">
-                    <MessageCircle />
-                  </IconButton>
-                  <Typography variant="caption">{topic.replies}</Typography>
-                  <IconButton size="small">
-                    <ThumbsUp />
-                  </IconButton>
-                  <Typography variant="caption">{topic.likes}</Typography>
-                </Box>
-              }
+          <Grid item xs={12} key={topic.id}>
+            <Card
+              sx={{
+                borderRadius: '16px',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: (theme) => theme.shadows[4],
+                },
+              }}
             >
-              <ListItemAvatar>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                  <TrendingUp />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="subtitle1">
-                      {topic.title}
-                    </Typography>
+              <CardContent>
+                <Stack spacing={2}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Chip
-                      size="small"
-                      label={`🔥 ${topic.trending}%`}
-                      color="error"
-                      sx={{ height: 20 }}
-                    />
-                  </Box>
-                }
-                secondary={
-                  <Box sx={{ mt: 1 }}>
-                    <Chip
-                      size="small"
                       label={topic.category}
-                      sx={{ mr: 1 }}
+                      size="small"
+                      sx={{
+                        bgcolor: '#6B5B95',
+                        color: 'white',
+                        fontWeight: 500,
+                      }}
                     />
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      Posted by {topic.author} • {topic.timestamp}
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Clock size={14} />
+                      <Typography variant="caption" color="text.secondary">
+                        {topic.timeAgo}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+
+                  <Typography variant="h6" fontWeight={600}>
+                    {topic.title}
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary">
+                    {topic.description}
+                  </Typography>
+
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar src={topic.author.avatar} sx={{ width: 32, height: 32 }} />
+                    <Typography variant="subtitle2">
+                      {topic.author.name}
                     </Typography>
+                  </Stack>
+
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" mb={1} display="block">
+                      Engagement Rate
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={topic.engagement}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        bgcolor: 'rgba(107, 91, 149, 0.1)',
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: '#6B5B95',
+                        },
+                      }}
+                    />
                   </Box>
-                }
-              />
-            </ListItem>
-          </Paper>
+
+                  <Stack
+                    direction="row"
+                    spacing={3}
+                    sx={{ pt: 1 }}
+                  >
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Eye size={16} />
+                      <Typography variant="body2" color="text.secondary">
+                        {topic.views}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <MessageCircle size={16} />
+                      <Typography variant="body2" color="text.secondary">
+                        {topic.comments}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <ThumbsUp size={16} />
+                      <Typography variant="body2" color="text.secondary">
+                        {topic.likes}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Share2 size={16} />
+                      <Typography variant="body2" color="text.secondary">
+                        {topic.shares}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </List>
+      </Grid>
     </Box>
   );
 };

@@ -16,20 +16,17 @@ import {
   MessageCircle,
   Share2,
   Eye,
-  Building2,
-  Briefcase,
-  Code2,
-  Rocket,
-  Lightbulb,
+  Hash,
   Clock,
+  Bell,
+  Tag,
 } from 'lucide-react';
 
-interface IndustryPost {
+interface Topic {
   id: number;
   title: string;
   description: string;
-  category: string;
-  industry: string;
+  tags: string[];
   author: {
     name: string;
     avatar: string;
@@ -43,89 +40,90 @@ interface IndustryPost {
   };
   timeAgo: string;
   engagement: number;
+  isFollowing: boolean;
 }
 
-const industryPosts: IndustryPost[] = [
+const topics: Topic[] = [
   {
     id: 1,
-    title: "AI's Impact on Healthcare Industry",
-    description: "Discussion on how artificial intelligence is transforming healthcare delivery and patient care.",
-    category: "Healthcare",
-    industry: "Medical Technology",
+    title: "Machine Learning in Practice",
+    description: "Real-world applications and case studies of machine learning in industry.",
+    tags: ["AI/ML", "Data Science", "Industry"],
     author: {
-      name: "Dr. Sarah Chen",
+      name: "Dr. Emily Chen",
       avatar: "https://i.pravatar.cc/150?img=1",
-      role: "Healthcare Innovation Lead"
+      role: "ML Engineer"
     },
     stats: {
-      views: 1250,
-      comments: 48,
-      likes: 215,
-      shares: 32
+      views: 1500,
+      comments: 45,
+      likes: 230,
+      shares: 28
     },
     timeAgo: "2h ago",
-    engagement: 85
+    engagement: 85,
+    isFollowing: true
   },
   {
     id: 2,
-    title: "Future of Sustainable Manufacturing",
-    description: "Exploring green technologies and sustainable practices in modern manufacturing.",
-    category: "Manufacturing",
-    industry: "Industrial Tech",
+    title: "Cloud Architecture Patterns",
+    description: "Best practices and patterns for cloud-native applications.",
+    tags: ["Cloud", "Architecture", "DevOps"],
     author: {
-      name: "Michael Rodriguez",
+      name: "James Wilson",
       avatar: "https://i.pravatar.cc/150?img=2",
-      role: "Sustainability Expert"
+      role: "Cloud Architect"
     },
     stats: {
       views: 980,
-      comments: 35,
-      likes: 178,
-      shares: 25
+      comments: 32,
+      likes: 185,
+      shares: 15
     },
     timeAgo: "4h ago",
-    engagement: 78
+    engagement: 78,
+    isFollowing: false
   },
   {
     id: 3,
-    title: "Blockchain in Financial Services",
-    description: "Analysis of blockchain technology's impact on banking and financial services.",
-    category: "Finance",
-    industry: "FinTech",
+    title: "Web3 Development",
+    description: "Latest trends and developments in Web3 and blockchain technology.",
+    tags: ["Blockchain", "Web3", "DApps"],
     author: {
       name: "Alex Kumar",
       avatar: "https://i.pravatar.cc/150?img=3",
-      role: "FinTech Analyst"
+      role: "Blockchain Developer"
     },
     stats: {
       views: 850,
-      comments: 42,
-      likes: 192,
-      shares: 28
+      comments: 28,
+      likes: 160,
+      shares: 22
     },
     timeAgo: "6h ago",
-    engagement: 82
+    engagement: 72,
+    isFollowing: true
   }
 ];
 
-const IndustryForums: React.FC = () => {
+const TopicTracking: React.FC = () => {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={600}>
-          Industry Discussions
+          Topic Tracking
         </Typography>
         <Chip
-          icon={<Building2 size={16} />}
-          label="Industry Insights"
+          icon={<Hash size={16} />}
+          label="Topics You Follow"
           color="primary"
           sx={{ bgcolor: '#6B5B95', color: 'white' }}
         />
       </Stack>
 
       <Grid container spacing={3}>
-        {industryPosts.map((post) => (
-          <Grid item xs={12} key={post.id}>
+        {topics.map((topic) => (
+          <Grid item xs={12} key={topic.id}>
             <Card
               sx={{
                 borderRadius: '16px',
@@ -140,46 +138,48 @@ const IndustryForums: React.FC = () => {
                 <Stack spacing={2}>
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Stack direction="row" spacing={1}>
-                      <Chip
-                        label={post.category}
-                        size="small"
-                        sx={{
-                          bgcolor: '#6B5B95',
-                          color: 'white',
-                          fontWeight: 500,
-                        }}
-                      />
-                      <Chip
-                        label={post.industry}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 500 }}
-                      />
+                      {topic.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          icon={<Tag size={14} />}
+                          sx={{
+                            bgcolor: topic.isFollowing ? '#6B5B95' : 'transparent',
+                            color: topic.isFollowing ? 'white' : 'inherit',
+                            borderColor: '#6B5B95',
+                            '& .MuiChip-icon': {
+                              color: topic.isFollowing ? 'white' : '#6B5B95',
+                            },
+                          }}
+                          variant={topic.isFollowing ? "filled" : "outlined"}
+                        />
+                      ))}
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Clock size={14} />
                       <Typography variant="caption" color="text.secondary">
-                        {post.timeAgo}
+                        {topic.timeAgo}
                       </Typography>
                     </Stack>
                   </Stack>
 
                   <Typography variant="h6" fontWeight={600}>
-                    {post.title}
+                    {topic.title}
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary">
-                    {post.description}
+                    {topic.description}
                   </Typography>
 
                   <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar src={post.author.avatar} sx={{ width: 32, height: 32 }} />
+                    <Avatar src={topic.author.avatar} sx={{ width: 32, height: 32 }} />
                     <Box>
                       <Typography variant="subtitle2">
-                        {post.author.name}
+                        {topic.author.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {post.author.role}
+                        {topic.author.role}
                       </Typography>
                     </Box>
                   </Stack>
@@ -190,7 +190,7 @@ const IndustryForums: React.FC = () => {
                     </Typography>
                     <LinearProgress
                       variant="determinate"
-                      value={post.engagement}
+                      value={topic.engagement}
                       sx={{
                         height: 6,
                         borderRadius: 3,
@@ -214,7 +214,7 @@ const IndustryForums: React.FC = () => {
                           <Eye size={16} />
                         </IconButton>
                         <Typography variant="body2" color="text.secondary">
-                          {post.stats.views}
+                          {topic.stats.views}
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -222,7 +222,7 @@ const IndustryForums: React.FC = () => {
                           <MessageCircle size={16} />
                         </IconButton>
                         <Typography variant="body2" color="text.secondary">
-                          {post.stats.comments}
+                          {topic.stats.comments}
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -230,7 +230,7 @@ const IndustryForums: React.FC = () => {
                           <ThumbsUp size={16} />
                         </IconButton>
                         <Typography variant="body2" color="text.secondary">
-                          {post.stats.likes}
+                          {topic.stats.likes}
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -238,10 +238,18 @@ const IndustryForums: React.FC = () => {
                           <Share2 size={16} />
                         </IconButton>
                         <Typography variant="body2" color="text.secondary">
-                          {post.stats.shares}
+                          {topic.stats.shares}
                         </Typography>
                       </Stack>
                     </Stack>
+                    <IconButton
+                      color={topic.isFollowing ? "primary" : "default"}
+                      sx={{
+                        bgcolor: topic.isFollowing ? 'rgba(107, 91, 149, 0.1)' : 'transparent',
+                      }}
+                    >
+                      <Bell size={16} />
+                    </IconButton>
                   </Stack>
                 </Stack>
               </CardContent>
@@ -253,4 +261,4 @@ const IndustryForums: React.FC = () => {
   );
 };
 
-export default IndustryForums;
+export default TopicTracking;

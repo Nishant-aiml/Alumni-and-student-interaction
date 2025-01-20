@@ -12,6 +12,8 @@ import {
   Lightbulb,
   Sparkles,
   MessageSquare,
+  Star,
+  Trophy,
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,7 +25,7 @@ export default function Navigation() {
   const { logout, currentUser } = useAuth();
 
   const handleLogoClick = () => {
-    navigate(currentUser ? '/' : '/landing');
+    navigate('/');
   };
 
   const handleLogout = async () => {
@@ -41,7 +43,6 @@ export default function Navigation() {
   );
 
   const navigation = [
-    { name: 'Home', href: '/', icon: GraduationCap },
     { name: 'Events', href: '/events', icon: Search },
     { name: 'Directory', href: '/directory', icon: User },
     { name: 'Mentorship', href: '/mentorship', icon: Briefcase },
@@ -50,6 +51,8 @@ export default function Navigation() {
     { name: 'Skill Trade', href: '/skill-trade', icon: ArrowRightLeft },
     { name: 'Innovation Hub', href: '/innovation', icon: Lightbulb },
     { name: 'Forum', href: '/forum', icon: MessageSquare },
+    { name: 'Success Stories', href: '/success-stories', icon: Star },
+    { name: 'Rewards', href: '/rewards', icon: Trophy },
   ];
 
   // Show simplified navigation for auth pages
@@ -121,24 +124,7 @@ export default function Navigation() {
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
-            <Link
-              to="/innovation"
-              className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium ${
-                isActive('/innovation')
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-              } transition-colors duration-200`}
-            >
-              <Sparkles className="h-5 w-5 mr-1.5" />
-              Innovation Hub
-            </Link>
-
-            <div className="flex-shrink-0">
-              <div className="relative rounded-full text-gray-400 p-1 hover:text-gray-500">
-                <Search className="h-6 w-6" />
-              </div>
-            </div>
-            <button className="ml-4 p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <button className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               <Bell className="h-6 w-6" />
             </button>
             <button
@@ -195,19 +181,6 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
-            <Link
-              to="/innovation"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActive('/innovation')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center">
-                <Sparkles className="h-5 w-5 mr-1.5" />
-                Innovation Hub
-              </div>
-            </Link>
           </div>
         </div>
       )}
