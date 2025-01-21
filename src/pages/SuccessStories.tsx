@@ -1,512 +1,481 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  Avatar,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  Tab,
-  Tabs,
-  useTheme,
-  Stack,
-  ImageList,
-  ImageListItem,
-} from '@mui/material';
-import {
-  Star,
-  Award,
-  Rocket,
-  Heart,
-  Share2,
-  MessageSquare,
-  Image as ImageIcon,
-  Upload,
-  Filter,
-  TrendingUp,
-  Users,
-  Target,
-  Lightbulb,
-} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { PlusCircle, Star, ThumbsUp, MessageCircle, Share2 } from 'lucide-react';
 
 interface Story {
-  id: number;
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
   title: string;
-  author: string;
+  content: string;
+  images: string[];
   category: string;
-  description: string;
-  impact: string;
   likes: number;
   comments: number;
   shares: number;
-  date: string;
-  image: string;
+  rating: number;
+  createdAt: string;
   tags: string[];
+  likedBy: string[];
+  commentsList: {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    content: string;
+    createdAt: string;
+  }[];
 }
 
-const categories = [
-  { label: 'All', value: 'all' },
-  { label: 'Entrepreneurship', value: 'entrepreneurship' },
-  { label: 'Career', value: 'career' },
-  { label: 'Research', value: 'research' },
-  { label: 'Social Impact', value: 'social-impact' },
-  { label: 'Innovation', value: 'innovation' },
-];
-
-const sampleStories: Story[] = [
+const dummyStories: Story[] = [
   {
-    id: 1,
-    title: "AI Startup Revolutionizing Healthcare",
-    author: "Dr. Sarah Chen",
-    category: "entrepreneurship",
-    description: "From a college project to a $10M startup, our AI-powered diagnostic tool is now used in over 100 hospitals.",
-    impact: "Helped diagnose rare diseases in over 10,000 patients",
-    likes: 1256,
+    id: '1',
+    userId: 'user1',
+    userName: 'Sarah Chen',
+    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
+    title: 'From College Project to Startup Success',
+    content: 'What started as a final year project in our college turned into a successful startup. Our team developed an AI-powered waste management system that is now being used by several municipalities. The journey wasn\'t easy, but the support from our college mentors and the startup ecosystem made it possible.',
+    images: [
+      'https://images.unsplash.com/photo-1519389950473-47ba0277781c',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f'
+    ],
+    category: 'Entrepreneurship',
+    likes: 234,
+    comments: 45,
+    shares: 23,
+    rating: 4.8,
+    createdAt: '2024-01-15T10:30:00Z',
+    tags: ['startup', 'technology', 'sustainability'],
+    likedBy: [],
+    commentsList: []
+  },
+  {
+    id: '2',
+    userId: 'user2',
+    userName: 'Rahul Sharma',
+    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahul',
+    title: 'Landing My Dream Job Through College Network',
+    content: 'The college\'s placement cell and alumni network played a crucial role in helping me land a position at Google. The mock interviews, resume workshops, and mentoring sessions prepared me well for the technical interviews. I\'m now working on cutting-edge AI projects!',
+    images: [
+      'https://images.unsplash.com/photo-1515187029135-18ee286d815b',
+      'https://images.unsplash.com/photo-1553877522-43269d4ea984'
+    ],
+    category: 'Career',
+    likes: 456,
     comments: 89,
-    shares: 234,
-    date: "2024-12-15",
-    image: "https://source.unsplash.com/random/800x600?medical",
-    tags: ["AI", "Healthcare", "Startup Success"],
+    shares: 67,
+    rating: 4.9,
+    createdAt: '2024-01-10T15:45:00Z',
+    tags: ['career', 'technology', 'placement'],
+    likedBy: [],
+    commentsList: []
   },
   {
-    id: 2,
-    title: "Breakthrough in Quantum Computing",
-    author: "Prof. James Wilson",
-    category: "research",
-    description: "Our team's quantum algorithm breakthrough could revolutionize cryptography and drug discovery.",
-    impact: "Published in Nature, cited by 500+ researchers",
-    likes: 892,
-    comments: 156,
-    shares: 445,
-    date: "2024-11-28",
-    image: "https://source.unsplash.com/random/800x600?technology",
-    tags: ["Quantum Computing", "Research", "Innovation"],
-  },
-  {
-    id: 3,
-    title: "Sustainable Energy Solution",
-    author: "Maria Rodriguez",
-    category: "social-impact",
-    description: "Developed a low-cost solar solution bringing electricity to remote villages.",
-    impact: "Provided electricity to 50,000+ people in rural areas",
-    likes: 2341,
-    comments: 167,
-    shares: 789,
-    date: "2024-12-01",
-    image: "https://source.unsplash.com/random/800x600?solar",
-    tags: ["Sustainability", "Social Impact", "Energy"],
-  },
-  {
-    id: 4,
-    title: "From Intern to Tech Lead at Google",
-    author: "Alex Kumar",
-    category: "career",
-    description: "My journey from summer intern to leading a team of 50+ engineers at Google.",
-    impact: "Led development of key Google Cloud features",
-    likes: 1567,
-    comments: 234,
-    shares: 567,
-    date: "2024-12-10",
-    image: "https://source.unsplash.com/random/800x600?office",
-    tags: ["Career Growth", "Leadership", "Tech"],
-  },
+    id: '3',
+    userId: 'user3',
+    userName: 'Priya Patel',
+    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya',
+    title: 'Winning the National Innovation Challenge',
+    content: 'Our team\'s project on renewable energy solutions won the National Innovation Challenge 2024. The mentorship from our professors and the resources provided by the college innovation lab were instrumental in our success. The prize money is now helping us patent our technology.',
+    images: [
+      'https://images.unsplash.com/photo-1507413245164-6160d8298b31',
+      'https://images.unsplash.com/photo-1531482615713-2afd69097998'
+    ],
+    category: 'Innovation',
+    likes: 345,
+    comments: 56,
+    shares: 34,
+    rating: 4.7,
+    createdAt: '2024-01-05T09:15:00Z',
+    tags: ['innovation', 'renewable-energy', 'competition'],
+    likedBy: [],
+    commentsList: []
+  }
 ];
 
 const SuccessStories: React.FC = () => {
-  const theme = useTheme();
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [openSubmit, setOpenSubmit] = useState(false);
-  const [stories, setStories] = useState(sampleStories);
+  const { user } = useAuth();
+  const [stories, setStories] = useState<Story[]>(dummyStories);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [newStory, setNewStory] = useState<Partial<Story>>({
+    title: '',
+    content: '',
+    images: [],
+    category: '',
+    tags: []
+  });
 
-  const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
-    setSelectedCategory(newValue);
+  const handleLike = (storyId: string) => {
+    if (!user) return;
+
+    setStories(prevStories => prevStories.map(story => {
+      if (story.id === storyId) {
+        const isLiked = story.likedBy.includes(user.id);
+        return {
+          ...story,
+          likes: isLiked ? story.likes - 1 : story.likes + 1,
+          likedBy: isLiked 
+            ? story.likedBy.filter(id => id !== user.id)
+            : [...story.likedBy, user.id]
+        };
+      }
+      return story;
+    }));
   };
 
-  const filteredStories = selectedCategory === 'all'
-    ? stories
-    : stories.filter(story => story.category === selectedCategory);
+  const handleComment = () => {
+    if (!user || !selectedStory || !newComment.trim()) return;
+
+    const comment = {
+      id: Date.now().toString(),
+      userId: user.id,
+      userName: user.firstName + ' ' + user.lastName,
+      userAvatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+      content: newComment.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    setStories(prevStories => prevStories.map(story => {
+      if (story.id === selectedStory.id) {
+        return {
+          ...story,
+          comments: story.comments + 1,
+          commentsList: [comment, ...story.commentsList]
+        };
+      }
+      return story;
+    }));
+
+    setNewComment('');
+  };
+
+  const openComments = (story: Story) => {
+    setSelectedStory(story);
+    setShowCommentsModal(true);
+  };
+
+  const handleCreateStory = () => {
+    if (newStory.title && newStory.content) {
+      const story: Story = {
+        id: Date.now().toString(),
+        userId: user?.id || '',
+        userName: user?.firstName + ' ' + user?.lastName || '',
+        userAvatar: user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+        title: newStory.title,
+        content: newStory.content,
+        images: newStory.images || [],
+        category: newStory.category || 'General',
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        rating: 0,
+        createdAt: new Date().toISOString(),
+        tags: newStory.tags || [],
+        likedBy: [],
+        commentsList: []
+      };
+
+      setStories([story, ...stories]);
+      setShowCreateModal(false);
+      setNewStory({
+        title: '',
+        content: '',
+        images: [],
+        category: '',
+        tags: []
+      });
+    }
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ 
-        textAlign: 'center', 
-        mb: 6,
-        background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%)',
-        p: 6,
-        borderRadius: '20px',
-        color: 'white',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%)',
-        }
-      }}>
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 800,
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-            position: 'relative',
-          }}
-        >
-          Success Stories
-        </Typography>
-        <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-          Inspiring journeys of innovation, impact, and achievement
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Star />}
-          onClick={() => setOpenSubmit(true)}
-          sx={{
-            bgcolor: 'white',
-            color: '#FF6B6B',
-            px: 4,
-            py: 1.5,
-            fontSize: '1.1rem',
-            borderRadius: '12px',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-            '&:hover': {
-              bgcolor: 'rgba(255,255,255,0.9)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
-            },
-            transition: 'all 0.3s ease',
-          }}
-        >
-          Share Your Story
-        </Button>
-      </Box>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Success Stories</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Inspiring journeys of students and alumni
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <PlusCircle className="h-5 w-5 mr-2" />
+            Share Your Story
+          </button>
+        </div>
 
-      <Box sx={{ mb: 4 }}>
-        <Tabs
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            '& .MuiTabs-indicator': {
-              background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-              height: '4px',
-              borderRadius: '2px',
-            },
-            '& .MuiTab-root': {
-              minWidth: 120,
-              borderRadius: '12px',
-              mx: 0.5,
-              color: 'text.secondary',
-              '&.Mui-selected': {
-                color: '#FF6B6B',
-                fontWeight: 600,
-              },
-              '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.04)',
-                color: '#FF6B6B',
-              },
-            },
-          }}
-        >
-          {categories.map((category) => (
-            <Tab
-              key={category.value}
-              label={category.label}
-              value={category.value}
-              icon={category.icon}
-              iconPosition="start"
-            />
-          ))}
-        </Tabs>
-      </Box>
-
-      <Grid container spacing={3}>
-        {filteredStories.map((story) => (
-          <Grid item xs={12} md={6} key={story.id}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '16px',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.1)',
-                },
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+        <div className="space-y-8">
+          {stories.map((story) => (
+            <div
+              key={story.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden"
             >
-              <Box
-                sx={{
-                  height: 240,
-                  overflow: 'hidden',
-                  position: 'relative',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '30%',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0))',
-                  },
-                }}
-              >
-                <img
-                  src={story.image}
-                  alt={story.title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.3s ease',
-                  }}
-                />
-              </Box>
-              
-              <CardContent sx={{ flexGrow: 1, position: 'relative', zIndex: 1 }}>
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                  <Avatar 
-                    sx={{ 
-                      width: 56, 
-                      height: 56, 
-                      bgcolor: 'primary.main',
-                      border: '3px solid white',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                      marginTop: '-40px',
-                    }}
-                  >
-                    {story.author.charAt(0)}
-                  </Avatar>
-                  <Box sx={{ pt: 1 }}>
-                    <Typography variant="h6" gutterBottom>
-                      {story.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      By {story.author} • {new Date(story.date).toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                </Stack>
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <img
+                    className="h-12 w-12 rounded-full"
+                    src={story.userAvatar}
+                    alt={story.userName}
+                  />
+                  <div className="ml-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {story.userName}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {new Date(story.createdAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
 
-                <Typography 
-                  color="text.secondary" 
-                  sx={{ 
-                    mb: 2,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {story.description}
-                </Typography>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {story.title}
+                </h3>
+                <p className="text-gray-700 mb-4">{story.content}</p>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography 
-                    variant="subtitle2" 
-                    color="primary" 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1, 
-                      mb: 1,
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Target size={16} />
-                    Impact
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#666' }}>
-                    {story.impact}
-                  </Typography>
-                </Box>
+                {story.images.length > 0 && (
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {story.images.map((image, index) => (
+                      <img
+                        key={index}
+                        src={image}
+                        alt={`Story image ${index + 1}`}
+                        className="rounded-lg w-full h-64 object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
 
-                <Stack 
-                  direction="row" 
-                  spacing={1} 
-                  sx={{ 
-                    mb: 2, 
-                    flexWrap: 'wrap', 
-                    gap: 1 
-                  }}
-                >
+                <div className="flex flex-wrap gap-2 mb-4">
                   {story.tags.map((tag) => (
-                    <Chip
+                    <span
                       key={tag}
-                      label={tag}
-                      size="small"
-                      sx={{
-                        borderRadius: '8px',
-                        bgcolor: 'rgba(78,205,196,0.1)',
-                        color: '#4ECDC4',
-                        '&:hover': {
-                          bgcolor: 'rgba(78,205,196,0.2)',
-                        },
-                      }}
-                    />
+                      className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                    >
+                      #{tag}
+                    </span>
                   ))}
-                </Stack>
-              </CardContent>
+                </div>
 
-              <CardActions 
-                sx={{ 
-                  justifyContent: 'space-between', 
-                  px: 2, 
-                  pb: 2,
-                  borderTop: '1px solid rgba(0,0,0,0.08)',
-                  pt: 2,
-                }}
-              >
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    size="small"
-                    startIcon={<Heart size={16} />}
-                    sx={{
-                      color: '#FF6B6B',
-                      '&:hover': {
-                        bgcolor: 'rgba(255,107,107,0.1)',
-                      },
-                    }}
-                  >
-                    {story.likes}
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<MessageSquare size={16} />}
-                    sx={{
-                      color: '#4ECDC4',
-                      '&:hover': {
-                        bgcolor: 'rgba(78,205,196,0.1)',
-                      },
-                    }}
-                  >
-                    {story.comments}
-                  </Button>
-                </Stack>
-                <IconButton 
-                  size="small"
-                  sx={{
-                    color: '#6B5B95',
-                    '&:hover': {
-                      bgcolor: 'rgba(107,91,149,0.1)',
-                      transform: 'scale(1.1)',
-                    },
-                    transition: 'all 0.2s ease',
-                  }}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={() => handleLike(story.id)}
+                      className={`flex items-center ${
+                        user && story.likedBy.includes(user.id)
+                          ? 'text-indigo-600'
+                          : 'text-gray-500 hover:text-indigo-600'
+                      }`}
+                    >
+                      <ThumbsUp className="h-5 w-5 mr-1" />
+                      {story.likes}
+                    </button>
+                    <button 
+                      onClick={() => openComments(story)}
+                      className="flex items-center text-gray-500 hover:text-indigo-600"
+                    >
+                      <MessageCircle className="h-5 w-5 mr-1" />
+                      {story.comments}
+                    </button>
+                    <button className="flex items-center text-gray-500 hover:text-indigo-600">
+                      <Share2 className="h-5 w-5 mr-1" />
+                      {story.shares}
+                    </button>
+                  </div>
+                  <div className="flex items-center">
+                    <Star className="h-5 w-5 text-yellow-400 mr-1" />
+                    <span className="text-sm font-medium text-gray-900">
+                      {story.rating.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Create Story Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Share Your Success Story
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={newStory.title}
+                  onChange={(e) =>
+                    setNewStory({ ...newStory, title: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Story
+                </label>
+                <textarea
+                  value={newStory.content}
+                  onChange={(e) =>
+                    setNewStory({ ...newStory, content: e.target.value })
+                  }
+                  rows={4}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Category
+                </label>
+                <select
+                  value={newStory.category}
+                  onChange={(e) =>
+                    setNewStory({ ...newStory, category: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
-                  <Share2 size={18} />
-                </IconButton>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                  <option value="">Select a category</option>
+                  <option value="Entrepreneurship">Entrepreneurship</option>
+                  <option value="Career">Career</option>
+                  <option value="Innovation">Innovation</option>
+                  <option value="Academic">Academic</option>
+                  <option value="Personal Growth">Personal Growth</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., startup, technology, innovation"
+                  onChange={(e) =>
+                    setNewStory({
+                      ...newStory,
+                      tags: e.target.value.split(',').map((tag) => tag.trim())
+                    })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateStory}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Share Story
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Dialog 
-        open={openSubmit} 
-        onClose={() => setOpenSubmit(false)}
-        maxWidth="md" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '16px',
-            boxShadow: '0 24px 48px rgba(0,0,0,0.1)',
-          },
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)',
-          color: 'white',
-          py: 3,
-        }}>
-          Share Your Success Story
-        </DialogTitle>
-        <DialogContent sx={{ p: 4 }}>
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              label="Story Title"
-              fullWidth
-              sx={{ mb: 3 }}
-              variant="outlined"
-            />
-            <TextField
-              label="Description"
-              fullWidth
-              multiline
-              rows={4}
-              sx={{ mb: 3 }}
-              variant="outlined"
-            />
-            <TextField
-              label="Impact"
-              fullWidth
-              multiline
-              rows={2}
-              sx={{ mb: 3 }}
-              variant="outlined"
-            />
-            <TextField
-              label="Tags (comma separated)"
-              fullWidth
-              sx={{ mb: 3 }}
-              variant="outlined"
-            />
-            <Button
-              variant="outlined"
-              startIcon={<Upload />}
-              fullWidth
-              sx={{
-                borderRadius: '8px',
-                p: 1.5,
-                borderStyle: 'dashed',
-                '&:hover': {
-                  borderStyle: 'dashed',
-                },
-              }}
-            >
-              Upload Media
-            </Button>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
-          <Button 
-            onClick={() => setOpenSubmit(false)}
-            sx={{ color: 'text.secondary' }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="contained"
-            onClick={() => setOpenSubmit(false)}
-            sx={{
-              background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)',
-              px: 4,
-              '&:hover': {
-                background: 'linear-gradient(135deg, #FF5252 0%, #45B7D1 100%)',
-              },
-            }}
-          >
-            Submit Story
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      {/* Comments Modal */}
+      {showCommentsModal && selectedStory && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
+              <button
+                onClick={() => setShowCommentsModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-start space-x-4">
+                <img
+                  src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+                  alt={user?.firstName}
+                  className="h-10 w-10 rounded-full"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="relative">
+                    <textarea
+                      rows={3}
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="Add a comment..."
+                    />
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <button
+                        onClick={handleComment}
+                        disabled={!newComment.trim()}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      >
+                        Comment
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {selectedStory.commentsList.map((comment) => (
+                <div key={comment.id} className="flex space-x-3">
+                  <div className="flex-shrink-0">
+                    <img
+                      className="h-10 w-10 rounded-full"
+                      src={comment.userAvatar}
+                      alt={comment.userName}
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-900">
+                        {comment.userName}
+                      </span>
+                      <span className="text-gray-500 ml-2">
+                        {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm text-gray-700">
+                      {comment.content}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {selectedStory.commentsList.length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  No comments yet. Be the first to comment!
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

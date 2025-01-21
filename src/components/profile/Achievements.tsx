@@ -7,6 +7,9 @@ interface AchievementsProps {
 }
 
 const Achievements: React.FC<AchievementsProps> = ({ profile }) => {
+  const achievements = profile?.achievements || [];
+  const badges = profile?.badges || [];
+
   const getCategoryColor = (category: string) => {
     const colors = {
       academic: 'bg-blue-100 text-blue-800',
@@ -28,10 +31,10 @@ const Achievements: React.FC<AchievementsProps> = ({ profile }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {profile.achievements.length === 0 ? (
+        {achievements.length === 0 ? (
           <p className="text-gray-500 text-center py-4 col-span-full">No achievements added yet</p>
         ) : (
-          profile.achievements.map((achievement) => (
+          achievements.map((achievement) => (
             <div
               key={achievement.id}
               className="relative group bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200"
@@ -98,11 +101,11 @@ const Achievements: React.FC<AchievementsProps> = ({ profile }) => {
       </div>
 
       {/* Badges Section */}
-      {profile.badges.length > 0 && (
+      {badges.length > 0 && (
         <div className="mt-8">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Earned Badges</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {profile.badges.map((badge) => (
+            {badges.map((badge) => (
               <div
                 key={badge.id}
                 className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"

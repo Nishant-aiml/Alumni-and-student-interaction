@@ -1,4 +1,7 @@
-export type UserRole = 'student' | 'alumni' | 'admin';
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN'
+}
 
 export interface User {
   id: string;
@@ -6,17 +9,33 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
-  isEmailVerified: boolean;
-  profileCompletion: number;
-  graduationYear?: number;
-  department?: string;
-  studentId?: string;
-  company?: string;
-  position?: string;
-  linkedInProfile?: string;
-  verifiedDocuments: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  bio?: string;
+  avatar?: string;
+  interests?: string[];
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+  };
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface UserProfile extends User {
+  posts: number;
+  followers: number;
+  following: number;
+  skills?: string[];
+  education?: {
+    school: string;
+    degree: string;
+    year: string;
+  }[];
+  experience?: {
+    company: string;
+    position: string;
+    duration: string;
+  }[];
 }
 
 export interface RegistrationData {
@@ -25,9 +44,6 @@ export interface RegistrationData {
   firstName: string;
   lastName: string;
   role: UserRole;
-  graduationYear?: number;
-  department?: string;
-  studentId?: string;
 }
 
 export interface LoginCredentials {

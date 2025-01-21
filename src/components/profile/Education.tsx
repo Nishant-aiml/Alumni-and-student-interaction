@@ -1,73 +1,146 @@
-import React from 'react';
-import { UserProfile } from '../../types/profile';
-import { GraduationCap, Calendar, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserProfile } from '../../types/auth';
+import { Plus, Edit2, Trash2, GraduationCap } from 'lucide-react';
 
 interface EducationProps {
-  profile: UserProfile;
+  education: { school: string; degree: string; year: string }[];
+  isEditing: boolean;
+  onUpdate: (education: { school: string; degree: string; year: string }[]) => void;
 }
 
-const Education: React.FC<EducationProps> = ({ profile }) => {
+const Education: React.FC<EducationProps> = ({ education, isEditing, onUpdate }) => {
+  const [newEducation, setNewEducation] = useState({
+    school: '',
+    degree: '',
+    year: ''
+  });
+
+  const handleAddEducation = () => {
+    if (newEducation.school && newEducation.degree) {
+      onUpdate([...education, newEducation]);
+      setNewEducation({ school: '', degree: '', year: '' });
+    }
+  };
+
+  const handleRemoveEducation = (index: number) => {
+    onUpdate(education.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateEducation = (index: number, field: string, value: string) => {
+    onUpdate(
+      education.map((edu, i) =>
+        i === index ? { ...edu, [field]: value } : edu
+      )
+    );
+  };
+
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Education</h2>
-        <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Education
-        </button>
+        <h2 className="text-xl font-semibold text-gray-900">Education</h2>
+        {isEditing && (
+          <button
+            onClick={handleAddEducation}
+            className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Education
+          </button>
+        )}
       </div>
 
-      <div className="space-y-8">
-        {profile.education.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No education added yet</p>
+      <div className="space-y-6">
+        {isEditing && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Education</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">School/University</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newEducation.school}
+                  onChange={(e) => setNewEducation({ ...newEducation, school: e.target.value })}
+                  placeholder="Enter school or university name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Degree</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newEducation.degree}
+                  onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                  placeholder="Enter degree or field of study"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Year</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newEducation.year}
+                  onChange={(e) => setNewEducation({ ...newEducation, year: e.target.value })}
+                  placeholder="e.g., 2018 - 2022"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {education.length === 0 ? (
+          <div className="text-center py-6">
+            <GraduationCap className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No education added</h3>
+            <p className="mt-1 text-sm text-gray-500">Add your educational background to showcase your academic journey.</p>
+          </div>
         ) : (
-          profile.education.map((edu) => (
-            <div key={edu.id} className="relative pb-8">
-              <div className="relative flex items-start space-x-3">
-                <div className="relative">
-                  <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center ring-8 ring-white">
-                    <GraduationCap className="h-6 w-6 text-gray-600" />
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
+          <div className="space-y-6">
+            {education.map((edu, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg border">
+                <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-lg font-medium text-gray-900">
-                      {edu.degree} in {edu.field}
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{edu.institution}</span>
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>{edu.startYear}</span>
-                      <span className="mx-1">-</span>
-                      {edu.current ? (
-                        <span className="text-indigo-600 font-medium">Present</span>
-                      ) : (
-                        <span>{edu.endYear}</span>
-                      )}
-                      {edu.gpa && (
-                        <>
-                          <span className="mx-2">•</span>
-                          <span>GPA: {edu.gpa}</span>
-                        </>
-                      )}
-                    </div>
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={edu.school}
+                          onChange={(e) => handleUpdateEducation(index, 'school', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={edu.degree}
+                          onChange={(e) => handleUpdateEducation(index, 'degree', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={edu.year}
+                          onChange={(e) => handleUpdateEducation(index, 'year', e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className="text-lg font-medium text-gray-900">{edu.school}</h4>
+                        <p className="text-sm text-gray-600">{edu.degree}</p>
+                        <p className="text-sm text-gray-500">{edu.year}</p>
+                      </>
+                    )}
                   </div>
-                  {edu.achievements.length > 0 && (
-                    <div className="mt-2">
-                      <h4 className="text-sm font-medium text-gray-900">Achievements</h4>
-                      <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-gray-700">
-                        {edu.achievements.map((achievement, index) => (
-                          <li key={index}>{achievement}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  {isEditing && (
+                    <button
+                      onClick={() => handleRemoveEducation(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

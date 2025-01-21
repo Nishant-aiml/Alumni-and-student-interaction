@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Allow read if authenticated, write only to own document
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+      
+      // Allow creation of new user document during registration
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

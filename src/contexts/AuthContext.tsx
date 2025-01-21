@@ -1,16 +1,50 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '../types/auth';
+import {
+  User as FirebaseUser,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
+
+type UserType = 'student' | 'mentor' | 'alumni';
+
+interface UserData {
+  uid: string;
+  email: string | null;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  userType: UserType;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
+  currentUser: FirebaseUser | null;
+  userData: UserData | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    userType: UserType;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -21,112 +55,156 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem('user');
-      const savedToken = localStorage.getItem('token');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
       
-      if (savedUser && savedToken) {
-        setUser(JSON.parse(savedUser));
-        setIsAuthenticated(true);
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            setUserData(userDoc.data() as UserData);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        setUserData(null);
       }
+      
       setIsLoading(false);
-    };
+    });
 
-    checkAuth();
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const register = async ({
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    userType
+  }: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    userType: UserType;
+  }) => {
     try {
-      // For now, automatically authenticate any login attempt
-      const tempUser = {
-        id: '1',
-        email,
-        firstName: 'Demo',
-        lastName: 'User',
-        role: 'student' as UserRole,
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update user profile
+      await updateProfile(user, {
+        displayName: `${firstName} ${lastName}`
+      });
+
+      // Create user document in Firestore
+      const userData: UserData = {
+        uid: user.uid,
+        email: user.email,
+        firstName,
+        lastName,
+        phoneNumber,
+        userType,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
-      
-      const token = 'demo-token-' + Date.now(); // Generate a temporary token
-      
-      setUser(tempUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(tempUser));
-      localStorage.setItem('token', token);
-      
-      // Set session cookie with longer expiration
-      document.cookie = `auth_session=${token}; path=/; max-age=86400`; // 24 hours
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+
+      await setDoc(doc(db, 'users', user.uid), {
+        ...userData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setUserData(userData);
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   };
 
-  const register = async (userData: any) => {
+  const login = async (email: string, password: string) => {
     try {
-      // For now, automatically register and authenticate any registration attempt
-      const tempUser = {
-        id: '1',
-        email: userData.email,
-        firstName: userData.firstName || 'Demo',
-        lastName: userData.lastName || 'User',
-        role: userData.role || 'student' as UserRole,
-      };
-      
-      const token = 'demo-token-' + Date.now(); // Generate a temporary token
-      
-      setUser(tempUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(tempUser));
-      localStorage.setItem('token', token);
-      
-      // Set session cookie with longer expiration
-      document.cookie = `auth_session=${token}; path=/; max-age=86400`; // 24 hours
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const { user } = await signInWithPopup(auth, provider);
+
+      // Check if user document exists
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        // Create new user document if it doesn't exist
+        const names = user.displayName?.split(' ') || ['', ''];
+        const userData: UserData = {
+          uid: user.uid,
+          email: user.email,
+          firstName: names[0],
+          lastName: names.slice(1).join(' '),
+          phoneNumber: user.phoneNumber || '',
+          userType: 'student', // Default for Google sign-in
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await setDoc(userDocRef, {
+          ...userData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        setUserData(userData);
+      }
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   };
 
   const logout = async () => {
     try {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      document.cookie = 'auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
+      await signOut(auth);
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   };
 
   const resetPassword = async (email: string) => {
-    // For now, just console log the reset password attempt
-    console.log('Password reset requested for:', email);
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   };
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  const value = {
+    currentUser,
+    userData,
+    isLoading,
+    login,
+    loginWithGoogle,
+    register,
+    logout,
+    resetPassword
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        login,
-        register,
-        logout,
-        resetPassword,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };

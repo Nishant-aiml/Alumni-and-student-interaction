@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { UserProfile } from '../types/profile';
-import { Tab as HeadlessTab } from '@headlessui/react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { UserProfile } from '../types/auth';
+import { Tab } from '@headlessui/react';
 import { 
   User, Briefcase, GraduationCap, Award, 
   Code, Network, Activity, Settings,
-  Edit3, Share2, MessageCircle
+  Edit3, Share2, MessageCircle, Save
 } from 'lucide-react';
 
 // Import profile sections
@@ -18,129 +19,198 @@ import Achievements from '../components/profile/Achievements';
 import Connections from '../components/profile/Connections';
 import ActivityFeed from '../components/profile/ActivityFeed';
 
-const mockProfile: UserProfile = {
-  id: '1',
-  firstName: 'John',
-  lastName: 'Doe',
-  headline: 'Software Engineer | AI Enthusiast | Open Source Contributor',
-  bio: 'Passionate about building innovative solutions...',
-  avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  coverImageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80',
-  location: 'San Francisco, CA',
-  email: 'john.doe@example.com',
-  socialLinks: {
-    linkedin: 'https://linkedin.com/in/johndoe',
-    github: 'https://github.com/johndoe',
-    twitter: 'https://twitter.com/johndoe',
-  },
-  education: [],
-  experience: [],
-  projects: [],
-  skills: [],
-  achievements: [],
-  badges: [],
-  connections: [],
-  activityUpdates: [],
-  profileCompletion: 85,
-  profileViews: 1234,
-  availability: {
-    forMentoring: true,
-    forJobs: true,
-    forProjects: true,
-  },
-  preferences: {
-    emailNotifications: true,
-    profileVisibility: 'public',
-    showEmail: true,
-    showPhone: false,
-  },
-};
-
 const Profile = () => {
-  const [profile] = useState<UserProfile>(mockProfile);
+  const { user, userProfile, updateProfile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (userProfile) {
+      setEditedProfile(userProfile);
+    }
+  }, [userProfile]);
+
+  const handleSaveProfile = async () => {
+    if (editedProfile) {
+      await updateProfile(editedProfile);
+      setIsEditing(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof UserProfile, value: any) => {
+    if (editedProfile) {
+      setEditedProfile({
+        ...editedProfile,
+        [field]: value
+      });
+    }
+  };
+
+  if (!user || !userProfile || !editedProfile) {
+    return <div>Loading...</div>;
+  }
 
   const tabs = [
-    { name: 'Overview', icon: User },
+    { name: 'Personal Info', icon: User },
     { name: 'Experience', icon: Briefcase },
     { name: 'Education', icon: GraduationCap },
-    { name: 'Projects', icon: Code },
-    { name: 'Skills', icon: Award },
+    { name: 'Skills', icon: Code },
     { name: 'Achievements', icon: Award },
     { name: 'Connections', icon: Network },
     { name: 'Activity', icon: Activity },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <ProfileHeader profile={profile} />
-
-        {/* Quick Actions */}
-        <div className="flex justify-end space-x-4 mt-4">
-          <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-            <Edit3 className="h-4 w-4 mr-2" />
-            Edit Profile
-          </button>
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </button>
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Message
-          </button>
+        <div className="bg-white shadow rounded-lg mb-6">
+          <div className="relative h-48">
+            <img
+              className="w-full h-full object-cover rounded-t-lg"
+              src={editedProfile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
+              alt="Cover"
+            />
+            <div className="absolute -bottom-16 left-6">
+              <img
+                className="w-32 h-32 rounded-full border-4 border-white"
+                src={editedProfile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
+                alt={`${user.firstName} ${user.lastName}`}
+              />
+            </div>
+            <div className="absolute top-4 right-4 space-x-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditedProfile(userProfile);
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="px-6 py-4 pt-20">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {user.firstName} {user.lastName}
+            </h1>
+            {isEditing ? (
+              <textarea
+                className="mt-2 w-full p-2 border rounded"
+                value={editedProfile.bio || ''}
+                onChange={(e) => handleInputChange('bio', e.target.value)}
+                placeholder="Write something about yourself..."
+              />
+            ) : (
+              <p className="mt-2 text-gray-600">{editedProfile.bio || 'No bio yet'}</p>
+            )}
+            <div className="mt-4 flex space-x-4">
+              <div className="text-sm text-gray-500">
+                <span className="font-medium text-gray-900">{editedProfile.posts}</span> posts
+              </div>
+              <div className="text-sm text-gray-500">
+                <span className="font-medium text-gray-900">{editedProfile.followers}</span> followers
+              </div>
+              <div className="text-sm text-gray-500">
+                <span className="font-medium text-gray-900">{editedProfile.following}</span> following
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Profile Navigation */}
-        <div className="mt-8">
-          <HeadlessTab.Group>
-            <HeadlessTab.List className="flex space-x-4 border-b border-gray-200">
-              {tabs.map((tab) => (
-                <HeadlessTab
-                  key={tab.name}
-                  className={({ selected }) =>
-                    `${
-                      selected
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center focus:outline-none`
+        {/* Tabs */}
+        <Tab.Group>
+          <Tab.List className="flex space-x-1 bg-white p-1 rounded-lg shadow mb-6">
+            {tabs.map((tab) => (
+              <Tab
+                key={tab.name}
+                className={({ selected }) =>
+                  `flex-1 py-2.5 text-sm font-medium leading-5 rounded-lg
+                  ${
+                    selected
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                   }
-                >
+                  `
+                }
+              >
+                <div className="flex items-center justify-center">
                   <tab.icon className="h-5 w-5 mr-2" />
                   {tab.name}
-                </HeadlessTab>
-              ))}
-            </HeadlessTab.List>
-
-            <HeadlessTab.Panels className="mt-8">
-              <HeadlessTab.Panel>
-                <PersonalInfo profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Experience profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Education profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Projects profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Skills profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Achievements profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <Connections profile={profile} />
-              </HeadlessTab.Panel>
-              <HeadlessTab.Panel>
-                <ActivityFeed profile={profile} />
-              </HeadlessTab.Panel>
-            </HeadlessTab.Panels>
-          </HeadlessTab.Group>
-        </div>
+                </div>
+              </Tab>
+            ))}
+          </Tab.List>
+          <Tab.Panels className="bg-white rounded-lg shadow">
+            <Tab.Panel>
+              <PersonalInfo
+                profile={editedProfile}
+                isEditing={isEditing}
+                onUpdate={handleInputChange}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <Experience
+                experience={editedProfile.experience || []}
+                isEditing={isEditing}
+                onUpdate={(exp) => handleInputChange('experience', exp)}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <Education
+                education={editedProfile.education || []}
+                isEditing={isEditing}
+                onUpdate={(edu) => handleInputChange('education', edu)}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <Skills
+                skills={editedProfile.skills || []}
+                isEditing={isEditing}
+                onUpdate={(skills) => handleInputChange('skills', skills)}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <Achievements
+                profile={editedProfile}
+                isEditing={isEditing}
+                onUpdate={(achievements) => handleInputChange('achievements', achievements)}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <Connections
+                profile={editedProfile}
+                isEditing={isEditing}
+                onUpdate={(connections) => handleInputChange('connections', connections)}
+              />
+            </Tab.Panel>
+            <Tab.Panel>
+              <ActivityFeed
+                profile={editedProfile}
+                isEditing={isEditing}
+              />
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
       </div>
     </div>
   );

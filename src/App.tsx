@@ -1,192 +1,215 @@
-import React from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { FeedProvider } from './contexts/FeedContext';
 import Navigation from './components/Navigation';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import PasswordRecovery from './components/auth/PasswordRecovery';
+import { useAuth } from './contexts/AuthContext';
 import Home from './pages/Home';
 import GetStarted from './pages/GetStarted';
 import Profile from './pages/Profile';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
 import Career from './pages/Career';
 import SkillTrade from './pages/SkillTrade';
-import LoginForm from './components/auth/LoginForm';
-import RegistrationForm from './components/auth/RegistrationForm';
-import PasswordRecovery from './components/auth/PasswordRecovery';
 import Events from './pages/Events';
 import Directory from './pages/Directory';
 import Mentorship from './pages/Mentorship';
-import InnovationHub from './pages/InnovationHub';
-import Forum from './components/forum/Forum';
 import SuccessStories from './pages/SuccessStories';
 import Rewards from './pages/Rewards';
 import Jobs from './pages/Jobs';
+import Feeds from './pages/Feeds';
+import UniversalChatbot from './components/universal/UniversalChatbot';
 
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen bg-gray-50">
-    <Navigation />
-    <main className="pt-16">
-      {children}
-    </main>
-  </div>
-);
+// Layout for authenticated pages
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser, isLoading } = useAuth();
 
-const PublicLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen bg-gray-50">
-    <Navigation />
-    <main className="pt-16">
+  // Show loading spinner while checking auth status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <main className="pt-16">
+        {children}
+      </main>
+      <UniversalChatbot />
+    </div>
+  );
+};
+
+// Layout for auth pages (login/register)
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser, isLoading } = useAuth();
+
+  // Show loading spinner while checking auth status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  // Redirect to home if already authenticated
+  if (currentUser) {
+    return <Navigate to="/home" replace />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-900">
       {children}
-    </main>
-  </div>
-);
+    </div>
+  );
+};
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route
-            path="/login"
-            element={
-              <PublicLayout>
-                <LoginForm />
-              </PublicLayout>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicLayout>
-                <RegistrationForm />
-              </PublicLayout>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <PublicLayout>
-                <PasswordRecovery />
-              </PublicLayout>
-            }
-          />
-          <Route
-            path="/get-started"
-            element={
-              <PublicLayout>
-                <GetStarted />
-              </PublicLayout>
-            }
-          />
+      <FeedProvider>
+        <Router>
+          <Routes>
+            {/* Auth Routes - Only accessible when not logged in */}
+            <Route
+              path="/login"
+              element={
+                <AuthLayout>
+                  <LoginForm />
+                </AuthLayout>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <AuthLayout>
+                  <RegisterForm />
+                </AuthLayout>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <AuthLayout>
+                  <PasswordRecovery />
+                </AuthLayout>
+              }
+            />
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
+            {/* Protected Routes - Only accessible when logged in */}
             <Route
               path="/home"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Home />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
+              }
+            />
+            <Route
+              path="/get-started"
+              element={
+                <AuthenticatedLayout>
+                  <GetStarted />
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/profile"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Profile />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/events"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Events />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/directory"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Directory />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/mentorship"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Mentorship />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/jobs"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Jobs />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/career"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Career />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/skill-trade"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <SkillTrade />
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="/innovation"
-              element={
-                <ProtectedLayout>
-                  <InnovationHub />
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="/forum"
-              element={
-                <ProtectedLayout>
-                  <Forum />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/success-stories"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <SuccessStories />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
             <Route
               path="/rewards"
               element={
-                <ProtectedLayout>
+                <AuthenticatedLayout>
                   <Rewards />
-                </ProtectedLayout>
+                </AuthenticatedLayout>
               }
             />
-          </Route>
+            <Route
+              path="/feeds"
+              element={
+                <AuthenticatedLayout>
+                  <Feeds />
+                </AuthenticatedLayout>
+              }
+            />
 
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+            {/* Redirect root and all unknown routes to login if not authenticated */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </FeedProvider>
     </AuthProvider>
   );
 }

@@ -1,33 +1,39 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaGoogle, FaLinkedin } from 'react-icons/fa';
-import { Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { FaGoogle } from 'react-icons/fa';
+import { Mail, Lock, User, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+type UserType = 'student' | 'mentor' | 'alumni';
+
 const RegisterForm = () => {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    phoneNumber: '',
+    userType: 'student' as UserType
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(null);
   };
 
-  const handleSocialRegister = async (provider: 'google' | 'linkedin') => {
+  const handleGoogleRegister = async () => {
     try {
       setIsLoading(true);
-      await register(provider + '@example.com', 'dummy-password');
-      navigate('/');
+      setError(null);
+      await loginWithGoogle();
+      navigate('/home');
     } catch (error) {
-      setError('Social registration failed. Please try again.');
+      setError('Google sign up failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -39,11 +45,26 @@ const RegisterForm = () => {
       setError('Passwords do not match');
       return;
     }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      setError('Please enter a valid 10-digit phone number');
+      return;
+    }
     try {
       setIsLoading(true);
       setError(null);
-      await register(formData.email, formData.password);
-      navigate('/');
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: formData.phoneNumber,
+        userType: formData.userType
+      });
+      navigate('/home');
     } catch (error) {
       setError('Registration failed. Please try again.');
     } finally {
@@ -61,34 +82,27 @@ const RegisterForm = () => {
           </p>
         </div>
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-8">
           <button
-            onClick={() => handleSocialRegister('google')}
+            onClick={handleGoogleRegister}
+            disabled={isLoading}
             className="w-full flex items-center justify-center px-4 py-3 border border-white/20 rounded-lg text-white hover:bg-white/10 transition-all duration-200 space-x-2"
           >
             <FaGoogle className="h-5 w-5 text-white" />
             <span>Sign up with Google</span>
           </button>
 
-          <button
-            onClick={() => handleSocialRegister('linkedin')}
-            className="w-full flex items-center justify-center px-4 py-3 border border-white/20 rounded-lg text-white hover:bg-white/10 transition-all duration-200 space-x-2"
-          >
-            <FaLinkedin className="h-5 w-5 text-white" />
-            <span>Sign up with LinkedIn</span>
-          </button>
-
-          <div className="relative">
+          <div className="relative mt-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-transparent text-gray-300">Or register with email</span>
+              <span className="px-2 bg-transparent text-gray-300">Or sign up with email</span>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           {error && (
             <div className="bg-red-500/10 backdrop-blur border border-red-500/20 rounded-lg p-4 flex items-center">
               <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
@@ -97,22 +111,85 @@ const RegisterForm = () => {
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300">
-              Full Name
+            <label htmlFor="userType" className="block text-sm font-medium text-gray-300">
+              I am a
+            </label>
+            <select
+              id="userType"
+              name="userType"
+              value={formData.userType}
+              onChange={handleInputChange}
+              className="mt-1 block w-full bg-white/5 backdrop-blur border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white"
+              required
+            >
+              <option value="student">Student</option>
+              <option value="mentor">Mentor</option>
+              <option value="alumni">Alumni</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
+                First Name
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className="pl-10 block w-full bg-white/5 backdrop-blur border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-400"
+                  placeholder="First name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
+                Last Name
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className="pl-10 block w-full bg-white/5 backdrop-blur border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-400"
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">
+              Phone Number
             </label>
             <div className="mt-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-gray-400" />
+                <Phone className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                id="name"
-                name="name"
-                type="text"
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
                 required
-                value={formData.name}
+                value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="pl-10 block w-full bg-white/5 backdrop-blur border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-400"
-                placeholder="Enter your full name"
+                placeholder="Enter your phone number"
+                pattern="[0-9]{10}"
               />
             </div>
           </div>
@@ -185,7 +262,7 @@ const RegisterForm = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creating account...' : 'Create Account'}
             </button>

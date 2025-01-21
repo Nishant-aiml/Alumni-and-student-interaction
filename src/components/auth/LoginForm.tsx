@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaGoogle, FaLinkedin } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
-  const { login } = useAuth();
+  const { login, loginWithGoogle, currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,18 +14,26 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // If user is already logged in, redirect to home
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/home', { replace: true });
+    }
+  }, [currentUser, navigate]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(null);
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'linkedin') => {
+  const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      await login(provider + '@example.com', 'dummy-password');
-      navigate('/');
+      setError(null);
+      await loginWithGoogle();
+      navigate('/home', { replace: true });
     } catch (error) {
-      setError('Social login failed. Please try again.');
+      setError('Google login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -38,14 +45,18 @@ const LoginForm = () => {
       setIsLoading(true);
       setError(null);
       await login(formData.email, formData.password);
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      navigate('/home', { replace: true });
     } catch (error) {
       setError('Invalid email or password');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Don't render anything if user is already logged in
+  if (currentUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -57,34 +68,27 @@ const LoginForm = () => {
           </p>
         </div>
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-8">
           <button
-            onClick={() => handleSocialLogin('google')}
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
             className="w-full flex items-center justify-center px-4 py-3 border border-white/20 rounded-lg text-white hover:bg-white/10 transition-all duration-200 space-x-2"
           >
             <FaGoogle className="h-5 w-5 text-white" />
             <span>Continue with Google</span>
           </button>
 
-          <button
-            onClick={() => handleSocialLogin('linkedin')}
-            className="w-full flex items-center justify-center px-4 py-3 border border-white/20 rounded-lg text-white hover:bg-white/10 transition-all duration-200 space-x-2"
-          >
-            <FaLinkedin className="h-5 w-5 text-white" />
-            <span>Continue with LinkedIn</span>
-          </button>
-
-          <div className="relative">
+          <div className="relative mt-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-transparent text-gray-300">Or continue with</span>
+              <span className="px-2 bg-transparent text-gray-300">Or continue with email</span>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           {error && (
             <div className="bg-red-500/10 backdrop-blur border border-red-500/20 rounded-lg p-4 flex items-center">
               <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
@@ -136,31 +140,11 @@ const LoginForm = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 bg-white/5 border-white/10 rounded focus:ring-indigo-500"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-400 hover:text-indigo-300">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

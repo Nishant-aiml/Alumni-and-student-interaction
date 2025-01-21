@@ -1,12 +1,15 @@
 import React from 'react';
-import { UserProfile } from '../../types/profile';
+import { UserProfile } from '../../types/auth';
 import { MessageSquare, ThumbsUp, Calendar, Award, Code, GraduationCap, Briefcase } from 'lucide-react';
 
 interface ActivityFeedProps {
   profile: UserProfile;
+  isEditing?: boolean;
 }
 
-const ActivityFeed: React.FC<ActivityFeedProps> = ({ profile }) => {
+const ActivityFeed: React.FC<ActivityFeedProps> = ({ profile, isEditing }) => {
+  const activityUpdates = profile?.activityUpdates || [];
+
   const getActivityIcon = (type: string) => {
     const icons = {
       post: MessageSquare,
@@ -43,56 +46,51 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ profile }) => {
 
       <div className="flow-root">
         <ul className="-mb-8">
-          {profile.activityUpdates.length === 0 ? (
-            <li className="text-gray-500 text-center py-4">No recent activity</li>
+          {activityUpdates.length === 0 ? (
+            <li className="text-center py-8">
+              <div className="flex flex-col items-center">
+                <Calendar className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-sm font-medium text-gray-900">No recent activity</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Activities will appear here as you interact with the platform
+                </p>
+              </div>
+            </li>
           ) : (
-            profile.activityUpdates.map((activity, activityIdx) => (
+            activityUpdates.map((activity, activityIdx) => (
               <li key={activity.id}>
                 <div className="relative pb-8">
-                  {activityIdx !== profile.activityUpdates.length - 1 ? (
+                  {activityIdx !== activityUpdates.length - 1 ? (
                     <span
-                      className="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200"
+                      className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
                       aria-hidden="true"
                     />
                   ) : null}
-                  <div className="relative flex items-start space-x-3">
-                    <div
-                      className={`relative h-10 w-10 rounded-full flex items-center justify-center ${getActivityColor(
-                        activity.type
-                      )}`}
-                    >
-                      {getActivityIcon(activity.type)}
+                  <div className="relative flex space-x-3">
+                    <div>
+                      <span
+                        className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${getActivityColor(
+                          activity.type
+                        )}`}
+                      >
+                        {getActivityIcon(activity.type)}
+                      </span>
                     </div>
-                    <div className="min-w-0 flex-1 bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                    <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                       <div>
-                        <p className="text-sm text-gray-900">{activity.content}</p>
+                        <p className="text-sm text-gray-900">{activity.description}</p>
+                        {activity.details && (
+                          <p className="mt-1 text-sm text-gray-500">{activity.details}</p>
+                        )}
                       </div>
-                      <div className="mt-2 text-sm space-x-2">
-                        <span className="text-gray-500">
-                          <Calendar className="inline-block h-4 w-4 mr-1" />
-                          {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                      <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                        <time dateTime={activity.date}>
+                          {new Date(activity.date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
                           })}
-                        </span>
-                        {activity.imageUrl && (
-                          <img
-                            src={activity.imageUrl}
-                            alt="Activity"
-                            className="mt-2 rounded-lg max-h-48 object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="mt-2 flex items-center space-x-4">
-                        <button className="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600">
-                          <ThumbsUp className="h-4 w-4 mr-1" />
-                          {activity.likes} Likes
-                        </button>
-                        <button className="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          {activity.comments} Comments
-                        </button>
+                        </time>
                       </div>
                     </div>
                   </div>

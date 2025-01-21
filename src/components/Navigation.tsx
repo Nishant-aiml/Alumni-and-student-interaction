@@ -8,8 +8,6 @@ import {
   LogOut,
   Briefcase,
   ArrowRightLeft,
-  Lightbulb,
-  MessageSquare,
   Star,
   Trophy,
 } from 'lucide-react';
@@ -24,11 +22,7 @@ export default function Navigation() {
   const isAuthenticated = !!currentUser;
 
   const handleLogoClick = () => {
-    if (isAuthenticated) {
-      navigate('/home');
-    } else {
-      navigate('/login');
-    }
+    navigate('/home');
   };
 
   const handleLogout = async () => {
@@ -51,8 +45,7 @@ export default function Navigation() {
     { name: 'Mentorship', href: '/mentorship', icon: Briefcase },
     { name: 'Career', href: '/career', icon: Briefcase },
     { name: 'Skill Trade', href: '/skill-trade', icon: ArrowRightLeft },
-    { name: 'Innovation Hub', href: '/innovation', icon: Lightbulb },
-    { name: 'Forum', href: '/forum', icon: MessageSquare },
+    { name: 'Feeds', href: '/feeds', icon: Star },
     { name: 'Success Stories', href: '/success-stories', icon: Star },
     { name: 'Rewards', href: '/rewards', icon: Trophy },
   ];
@@ -65,7 +58,7 @@ export default function Navigation() {
           <div className="flex justify-between h-16">
             <div
               className="flex-shrink-0 flex items-center cursor-pointer"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/home')}
             >
               <GraduationCap className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl md:text-2xl font-bold text-indigo-600">AlumNet</span>

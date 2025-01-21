@@ -1,104 +1,146 @@
-import React from 'react';
-import { UserProfile } from '../../types/profile';
-import { Building2, MapPin, Calendar, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserProfile } from '../../types/auth';
+import { Plus, Edit2, Trash2, Briefcase } from 'lucide-react';
 
 interface ExperienceProps {
-  profile: UserProfile;
+  experience: { company: string; position: string; duration: string }[];
+  isEditing: boolean;
+  onUpdate: (experience: { company: string; position: string; duration: string }[]) => void;
 }
 
-const Experience: React.FC<ExperienceProps> = ({ profile }) => {
+const Experience: React.FC<ExperienceProps> = ({ experience, isEditing, onUpdate }) => {
+  const [newExperience, setNewExperience] = useState({
+    company: '',
+    position: '',
+    duration: ''
+  });
+
+  const handleAddExperience = () => {
+    if (newExperience.company && newExperience.position) {
+      onUpdate([...experience, newExperience]);
+      setNewExperience({ company: '', position: '', duration: '' });
+    }
+  };
+
+  const handleRemoveExperience = (index: number) => {
+    onUpdate(experience.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateExperience = (index: number, field: string, value: string) => {
+    onUpdate(
+      experience.map((exp, i) =>
+        i === index ? { ...exp, [field]: value } : exp
+      )
+    );
+  };
+
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Professional Experience</h2>
-        <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Experience
-        </button>
+        <h2 className="text-xl font-semibold text-gray-900">Experience</h2>
+        {isEditing && (
+          <button
+            onClick={handleAddExperience}
+            className="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Experience
+          </button>
+        )}
       </div>
 
-      <div className="space-y-8">
-        {profile.experience.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No experience added yet</p>
+      <div className="space-y-6">
+        {isEditing && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Experience</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Company</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newExperience.company}
+                  onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                  placeholder="Enter company name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Position</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newExperience.position}
+                  onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
+                  placeholder="Enter position"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Duration</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  value={newExperience.duration}
+                  onChange={(e) => setNewExperience({ ...newExperience, duration: e.target.value })}
+                  placeholder="e.g., Jan 2020 - Present"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {experience.length === 0 ? (
+          <div className="text-center py-6">
+            <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No experience added</h3>
+            <p className="mt-1 text-sm text-gray-500">Add your professional experience to showcase your career journey.</p>
+          </div>
         ) : (
-          profile.experience.map((exp) => (
-            <div key={exp.id} className="relative pb-8">
-              <div className="relative flex items-start space-x-3">
-                <div className="relative">
-                  <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center ring-8 ring-white">
-                    <Building2 className="h-6 w-6 text-gray-600" />
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
+          <div className="space-y-6">
+            {experience.map((exp, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg border">
+                <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-lg font-medium text-gray-900">
-                      {exp.position}
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{exp.company}</span>
-                      {exp.location && (
-                        <>
-                          <span className="mx-2">•</span>
-                          <span className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {exp.location}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <time dateTime={exp.startDate}>
-                        {new Date(exp.startDate).toLocaleDateString('en-US', {
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </time>
-                      <span className="mx-1">-</span>
-                      {exp.current ? (
-                        <span className="text-indigo-600 font-medium">Present</span>
-                      ) : (
-                        <time dateTime={exp.endDate}>
-                          {new Date(exp.endDate!).toLocaleDateString('en-US', {
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </time>
-                      )}
-                    </div>
-                  </div>
-                  {exp.description && (
-                    <div className="mt-2 text-sm text-gray-700">
-                      <p>{exp.description}</p>
-                    </div>
-                  )}
-                  {exp.skills.length > 0 && (
-                    <div className="mt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {exp.skills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={exp.company}
+                          onChange={(e) => handleUpdateExperience(index, 'company', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={exp.position}
+                          onChange={(e) => handleUpdateExperience(index, 'position', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={exp.duration}
+                          onChange={(e) => handleUpdateExperience(index, 'duration', e.target.value)}
+                        />
                       </div>
-                    </div>
-                  )}
-                  {exp.highlights.length > 0 && (
-                    <div className="mt-2">
-                      <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                        {exp.highlights.map((highlight, index) => (
-                          <li key={index}>{highlight}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    ) : (
+                      <>
+                        <h4 className="text-lg font-medium text-gray-900">{exp.company}</h4>
+                        <p className="text-sm text-gray-600">{exp.position}</p>
+                        <p className="text-sm text-gray-500">{exp.duration}</p>
+                      </>
+                    )}
+                  </div>
+                  {isEditing && (
+                    <button
+                      onClick={() => handleRemoveExperience(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>
