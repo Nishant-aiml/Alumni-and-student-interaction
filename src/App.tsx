@@ -130,7 +130,6 @@ function App() {
               {/* Fallback route */}
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
-            <InstallPrompt />
           </div>
         </FeedProvider>
       </AuthProvider>

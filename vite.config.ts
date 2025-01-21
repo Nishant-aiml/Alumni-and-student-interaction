@@ -2,12 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'logo192.png', 'logo512.png'],
       manifest: {
         name: 'AlumNet - Alumni Network',
@@ -20,6 +19,11 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
+          {
+            src: 'favicon.ico',
+            sizes: '64x64 32x32 24x24 16x16',
+            type: 'image/x-icon'
+          },
           {
             src: 'logo192.png',
             sizes: '192x192',
@@ -34,7 +38,11 @@ export default defineConfig({
           }
         ]
       },
+      devOptions: {
+        enabled: true
+      },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -43,7 +51,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -57,7 +65,7 @@ export default defineConfig({
               cacheName: 'gstatic-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -68,15 +76,13 @@ export default defineConfig({
       }
     })
   ],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['date-fns']
-  },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'date-fns': ['date-fns']
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
         }
       }
     }
