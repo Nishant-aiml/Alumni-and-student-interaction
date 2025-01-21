@@ -49,17 +49,31 @@
     {
       "name": "Home",
       "url": "/home",
+      "description": "View your home feed",
       "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Events",
-      "url": "/events",
+      "name": "Profile",
+      "url": "/profile",
+      "description": "View your profile",
       "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
     }
   ],
-  "related_applications": [],
-  "scope": "/",
   "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
+    "client_mode": ["focus-existing", "auto"]
+  },
+  "scope": "/",
+  "dir": "ltr",
+  "lang": "en",
+  "related_applications": [],
+  "iarc_rating_id": "",
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
   }
 }

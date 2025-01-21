@@ -70,5 +70,15 @@ export default defineConfig({
   ],
   optimizeDeps: {
     exclude: ['lucide-react'],
+    include: ['date-fns']
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'date-fns': ['date-fns']
+        }
+      }
+    }
+  }
 });
