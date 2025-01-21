@@ -10,6 +10,7 @@ import {
   ArrowRightLeft,
   Star,
   Trophy,
+  BookOpen,
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,6 +49,7 @@ export default function Navigation() {
     { name: 'Feeds', href: '/feeds', icon: Star },
     { name: 'Success Stories', href: '/success-stories', icon: Star },
     { name: 'Rewards', href: '/rewards', icon: Trophy },
+    { name: 'Resources', href: '/resources', icon: BookOpen },
   ];
 
   // Show simplified navigation for auth pages
@@ -116,9 +118,6 @@ export default function Navigation() {
             ))}
             
             {/* Desktop Right Side Items */}
-            <button className="p-1 rounded-full text-gray-400 hover:text-gray-500">
-              <Bell className="h-6 w-6" />
-            </button>
             <button
               onClick={handleLogout}
               className="ml-2 inline-flex items-center px-2 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -146,9 +145,12 @@ export default function Navigation() {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center space-x-2 md:hidden">
-            <button className="p-1 rounded-full text-gray-400 hover:text-gray-500">
-              <Bell className="h-6 w-6" />
-            </button>
+            <Link
+              to="/profile"
+              className="p-1 rounded-full text-gray-400 hover:text-gray-500"
+            >
+              <User className="h-6 w-6" />
+            </Link>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"

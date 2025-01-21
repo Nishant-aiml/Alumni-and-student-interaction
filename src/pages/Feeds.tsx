@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ThumbsUp, MessageCircle, Share2, Bookmark, Filter, Image as ImageIcon, Smile, Send, 
-  BookmarkIcon, MessageSquare, Users, Star, Briefcase, BookOpen, X } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ThumbsUp, MessageCircle, Share2, BookmarkIcon, Star, Filter, Image as ImageIcon, Smile, Send } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import ConversationsList from '../components/feeds/ConversationsList';
+import ChatModal from '../components/directory/ChatModal';
 
 interface Feed {
   id: string;
-  userId: string;
   userName: string;
   userAvatar: string;
   content: string;
@@ -14,104 +16,17 @@ interface Feed {
   likes: number;
   comments: number;
   shares: number;
+  isBookmarked: boolean;
   createdAt: string;
   likedBy: string[];
-  commentsList: {
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    content: string;
-    createdAt: string;
-  }[];
-  isBookmarked: boolean;
-  tags: string[];
+  commentsList: any[];
 }
 
-const dummyFeeds: Feed[] = [
-  {
-    id: '1',
-    userId: 'user1',
-    userName: 'Sarah Chen',
-    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-    content: 'Just completed my machine learning project using TensorFlow! 🚀 The model successfully predicts student performance based on various factors. Excited to share more details soon! #MachineLearning #AI #Education',
-    images: [
-      'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb',
-      'https://images.unsplash.com/photo-1551434678-e076c223a692'
-    ],
-    likes: 42,
-    comments: 8,
-    shares: 5,
-    createdAt: '2024-01-20T15:30:00Z',
-    likedBy: [],
-    commentsList: [],
-    isBookmarked: false,
-    tags: ['AI', 'Education', 'Technology']
-  },
-  {
-    id: '2',
-    userId: 'user2',
-    userName: 'Alex Kumar',
-    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
-    content: 'Our team won the first prize at the National Robotics Competition! 🏆 Months of hard work paid off. Special thanks to our mentors and college for the support. Check out our winning robot in action! #Robotics #Innovation',
-    images: [
-      'https://images.unsplash.com/photo-1485827404703-89b55fcc595e',
-      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'
-    ],
-    likes: 156,
-    comments: 23,
-    shares: 18,
-    createdAt: '2024-01-19T18:45:00Z',
-    likedBy: [],
-    commentsList: [],
-    isBookmarked: true,
-    tags: ['Robotics', 'Competition', 'Engineering']
-  },
-  {
-    id: '3',
-    userId: 'user3',
-    userName: 'Priya Patel',
-    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya',
-    content: 'Hosted a successful workshop on "Women in Tech" today! 👩‍💻 Amazing to see so many passionate students interested in tech careers. Together we can bridge the gender gap in tech. Swipe to see highlights! #WomenInTech #Diversity',
-    images: [
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
-      'https://images.unsplash.com/photo-1531482615713-2afd69097998'
-    ],
-    likes: 89,
-    comments: 15,
-    shares: 12,
-    createdAt: '2024-01-18T12:15:00Z',
-    likedBy: [],
-    commentsList: [],
-    isBookmarked: false,
-    tags: ['WomenInTech', 'Workshop', 'Diversity']
-  },
-  {
-    id: '4',
-    userId: 'user4',
-    userName: 'David Wilson',
-    userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=david',
-    content: 'Breakthrough in our renewable energy research! 🌱 Our new solar panel design shows 25% higher efficiency. Proud of what our team has achieved. Details in the attached presentation. #CleanEnergy #Innovation',
-    images: [
-      'https://images.unsplash.com/photo-1509391366360-e076c223a692',
-      'https://images.unsplash.com/photo-1509390836518-c3b785134897'
-    ],
-    likes: 213,
-    comments: 45,
-    shares: 67,
-    createdAt: '2024-01-17T09:30:00Z',
-    likedBy: [],
-    commentsList: [],
-    isBookmarked: true,
-    tags: ['Sustainability', 'Research', 'Innovation']
-  }
-];
-
 const Feeds: React.FC = () => {
-  const { user } = useAuth();
+  const { currentUser, userData } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [feeds, setFeeds] = useState<Feed[]>(dummyFeeds);
+  const [feeds, setFeeds] = useState<Feed[]>([]);
   const [newPost, setNewPost] = useState('');
   const [selectedImages, setSelectedImages] = useState<FileList | null>(null);
   const [filter, setFilter] = useState('all');
@@ -123,50 +38,147 @@ const Feeds: React.FC = () => {
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [bookmarkedFeeds, setBookmarkedFeeds] = useState<Feed[]>([]);
+  const [starredEvents, setStarredEvents] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState({
-    displayName: user?.displayName || 'Demo User',
-    university: 'XYZ University',
-    bio: '',
-    interests: [] as string[],
-    skills: [] as string[],
-    bookmarks: [] as string[]
+    displayName: '',
+    university: ''
   });
 
-  useEffect(() => {
-    const path = location.pathname.split('/')[1] || 'feeds';
-    setActiveSection(path);
-  }, [location]);
+  // Initial dummy feeds data
+  const initialFeeds: Feed[] = [
+    {
+      id: '1',
+      userName: 'Priya Sharma',
+      userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya',
+      content: 'Just completed my internship at Google! Excited to share that I\'ll be joining their ML team full-time. Grateful for this opportunity! 🚀 #TechCareers #WomenInTech',
+      images: ['https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=500&auto=format'],
+      likes: 245,
+      comments: 28,
+      shares: 15,
+      isBookmarked: false,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      likedBy: [],
+      commentsList: []
+    },
+    {
+      id: '2',
+      userName: 'Rahul Verma',
+      userAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahul',
+      content: 'Sharing my experience from the recent hackathon at VNIT. Our team built a sustainable energy monitoring system using IoT and won first place! Check out the project demo 👇',
+      images: [
+        'https://images.unsplash.com/photo-1504384764586-bb4cdc1707b0?w=500&auto=format',
+        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&auto=format'
+      ],
+      likes: 189,
+      comments: 42,
+      shares: 23,
+      isBookmarked: true,
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      likedBy: [],
+      commentsList: []
+    }
+  ];
 
+  // Initialize feeds state with dummy data
+  useEffect(() => {
+    setFeeds(initialFeeds);
+  }, []);
+
+  // Handle navigation
+  const handleNavigation = (section: string) => {
+    setActiveSection(section);
+  };
+
+  // Handle edit profile
   const handleEditProfile = () => {
     setShowEditProfile(true);
   };
 
-  const handleProfileUpdate = (updatedProfile: typeof userProfile) => {
-    setUserProfile(updatedProfile);
-    setShowEditProfile(false);
+  // Handle unstar event
+  const handleUnstarEvent = (eventId: string) => {
+    setStarredEvents(prev => prev.filter(event => event.id !== eventId));
   };
 
-  const handleNavigation = (section: string) => {
-    setActiveSection(section);
-    navigate(`/${section}`);
+  // Update userProfile when userData changes
+  useEffect(() => {
+    if (userData) {
+      setUserProfile(prev => ({
+        ...prev,
+        displayName: `${userData.firstName} ${userData.lastName}`,
+        university: userData.company || 'University Name',
+        bio: userData.bio || ''
+      }));
+    }
+  }, [userData]);
+
+  // Handle like
+  const handleLike = (feedId: string) => {
+    setFeeds(feeds.map(feed => {
+      if (feed.id === feedId) {
+        const isLiked = feed.likedBy.includes(userData?.uid || 'anonymous');
+        return {
+          ...feed,
+          likes: isLiked ? feed.likes - 1 : feed.likes + 1,
+          likedBy: isLiked
+            ? feed.likedBy.filter(id => id !== userData?.uid)
+            : [...feed.likedBy, userData?.uid || 'anonymous']
+        };
+      }
+      return feed;
+    }));
   };
 
-  const handleOpenCommentsModal = (feed: Feed) => {
-    setSelectedFeed(feed);
-    setShowCommentsModal(true);
+  // Handle comment
+  const handleComment = (feedId: string, commentText?: string) => {
+    const text = commentText || comments[feedId];
+    if (!text?.trim()) return;
+
+    const newComment = {
+      id: Date.now().toString(),
+      userId: userData?.uid || 'anonymous',
+      userName: userProfile.displayName,
+      userAvatar: userData?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
+      content: text.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setFeeds(feeds.map(feed => {
+      if (feed.id === feedId) {
+        return {
+          ...feed,
+          comments: feed.comments + 1,
+          commentsList: [newComment, ...feed.commentsList]
+        };
+      }
+      return feed;
+    }));
+
+    setComments({ ...comments, [feedId]: '' });
   };
 
-  const handleCloseCommentsModal = () => {
-    setSelectedFeed(null);
-    setShowCommentsModal(false);
-    setComments({});
+  // Handle bookmark
+  const handleBookmark = (feedId: string) => {
+    // Update the feed's bookmark status
+    setFeeds(feeds.map(feed => 
+      feed.id === feedId 
+        ? { ...feed, isBookmarked: !feed.isBookmarked }
+        : feed
+    ));
+
+    // Update user's bookmarks
+    setUserProfile(prev => {
+      const currentFeed = feeds.find(f => f.id === feedId);
+      const newBookmarks = currentFeed?.isBookmarked
+        ? prev.bookmarks.filter(id => id !== feedId)
+        : [...prev.bookmarks, feedId];
+      return { ...prev, bookmarks: newBookmarks };
+    });
   };
 
-  const handleOpenShareModal = (feed: Feed) => {
-    setSelectedFeed(feed);
-    setShowShareModal(true);
-  };
-
+  // Handle share
   const handleShare = (platform: string) => {
     if (!selectedFeed) return;
     
@@ -200,74 +212,14 @@ const Feeds: React.FC = () => {
     ));
   };
 
-  const handleBookmark = (feedId: string) => {
-    // Update the feed's bookmark status
-    setFeeds(feeds.map(feed => 
-      feed.id === feedId 
-        ? { ...feed, isBookmarked: !feed.isBookmarked }
-        : feed
-    ));
-
-    // Update user's bookmarks
-    setUserProfile(prev => {
-      const currentFeed = feeds.find(f => f.id === feedId);
-      const newBookmarks = currentFeed?.isBookmarked
-        ? prev.bookmarks.filter(id => id !== feedId)
-        : [...prev.bookmarks, feedId];
-      return { ...prev, bookmarks: newBookmarks };
-    });
-  };
-
-  const handleComment = (feedId: string, commentText?: string) => {
-    const text = commentText || comments[feedId];
-    if (!text?.trim()) return;
-
-    const newComment = {
-      id: Date.now().toString(),
-      userId: user?.uid || 'anonymous',
-      userName: userProfile.displayName,
-      userAvatar: user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
-      content: text.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setFeeds(feeds.map(feed => {
-      if (feed.id === feedId) {
-        return {
-          ...feed,
-          comments: feed.comments + 1,
-          commentsList: [newComment, ...feed.commentsList]
-        };
-      }
-      return feed;
-    }));
-
-    setComments({ ...comments, [feedId]: '' });
-  };
-
-  const handleLike = (feedId: string) => {
-    setFeeds(feeds.map(feed => {
-      if (feed.id === feedId) {
-        const isLiked = feed.likedBy.includes(user?.uid || 'anonymous');
-        return {
-          ...feed,
-          likes: isLiked ? feed.likes - 1 : feed.likes + 1,
-          likedBy: isLiked
-            ? feed.likedBy.filter(id => id !== user?.uid)
-            : [...feed.likedBy, user?.uid || 'anonymous']
-        };
-      }
-      return feed;
-    }));
-  };
-
+  // Get filtered content
   const getFilteredContent = () => {
     switch (activeSection) {
       case 'feeds':
         return feeds
           .filter(feed => {
             if (filter === 'all') return true;
-            if (filter === 'following') return feed.userId === user?.uid;
+            if (filter === 'following') return feed.userId === userData?.uid;
             if (filter === 'trending') return feed.likes > 50;
             return true;
           })
@@ -279,9 +231,6 @@ const Feeds: React.FC = () => {
           });
       case 'bookmarks':
         return feeds.filter(feed => feed.isBookmarked);
-      case 'groups':
-        // This would typically fetch from an API
-        return [];
       case 'events':
         // This would typically fetch from an API
         return [];
@@ -289,7 +238,7 @@ const Feeds: React.FC = () => {
         return feeds
           .filter(feed => {
             if (filter === 'all') return true;
-            if (filter === 'following') return feed.userId === user?.uid;
+            if (filter === 'following') return feed.userId === userData?.uid;
             if (filter === 'trending') return feed.likes > 50;
             return true;
           })
@@ -302,15 +251,16 @@ const Feeds: React.FC = () => {
     }
   };
 
+  // Handle post submit
   const handlePostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.trim()) return;
 
     const newFeed: Feed = {
       id: Date.now().toString(),
-      userId: user?.uid || 'anonymous',
-      userName: user?.displayName || 'Anonymous User',
-      userAvatar: user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
+      userId: userData?.uid || 'anonymous',
+      userName: userProfile.displayName,
+      userAvatar: userData?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
       content: newPost,
       images: selectedImages ? Array.from(selectedImages).map(file => URL.createObjectURL(file)) : [],
       likes: 0,
@@ -320,7 +270,6 @@ const Feeds: React.FC = () => {
       likedBy: [],
       commentsList: [],
       isBookmarked: false,
-      tags: extractTags(newPost),
     };
 
     setFeeds([newFeed, ...feeds]);
@@ -328,667 +277,358 @@ const Feeds: React.FC = () => {
     setSelectedImages(null);
   };
 
-  const extractTags = (content: string): string[] => {
-    const tags = content.match(/#\w+/g);
-    return tags ? tags.map(tag => tag.slice(1)) : [];
-  };
-
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-80 bg-white shadow-lg fixed h-full overflow-y-auto">
-        {/* Profile Section */}
-        <div className="p-6 border-b">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl">
-              {userProfile.displayName.substring(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">{userProfile.displayName}</h2>
-              <p className="text-gray-600">Student at {userProfile.university}</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleEditProfile}
-            className="w-full mt-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Edit Profile
-          </button>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="p-4 space-y-2">
-          <button 
-            onClick={() => handleNavigation('feeds')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'feeds' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <BookmarkIcon className="w-5 h-5" />
-            <span className="font-medium">My Feeds & Bookmarks</span>
-          </button>
-          
-          <button 
-            onClick={() => handleNavigation('conversations')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'conversations' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">Conversations</span>
-          </button>
-          
-          <button 
-            onClick={() => handleNavigation('groups')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'groups' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            <span className="font-medium">Groups Joined</span>
-          </button>
-          
-          <button 
-            onClick={() => handleNavigation('events')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'events' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <Star className="w-5 h-5" />
-            <span className="font-medium">Starred Events</span>
-          </button>
-          
-          <button 
-            onClick={() => handleNavigation('career-guidance')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'career-guidance' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <Briefcase className="w-5 h-5" />
-            <span className="font-medium">Career Guidance AI</span>
-          </button>
-          
-          <button 
-            onClick={() => handleNavigation('learn')}
-            className={`flex w-full items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 ${
-              activeSection === 'learn' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700'
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="font-medium">Learn with AI</span>
-          </button>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 ml-80">
-        <div className="max-w-4xl mx-auto p-4 space-y-6">
-          {/* Edit Profile Modal */}
-          {showEditProfile && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleProfileUpdate(userProfile);
-                }}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Name</label>
-                      <input
-                        type="text"
-                        value={userProfile.displayName}
-                        onChange={(e) => setUserProfile({ ...userProfile, displayName: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">University</label>
-                      <input
-                        type="text"
-                        value={userProfile.university}
-                        onChange={(e) => setUserProfile({ ...userProfile, university: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Bio</label>
-                      <textarea
-                        value={userProfile.bio}
-                        onChange={(e) => setUserProfile({ ...userProfile, bio: e.target.value })}
-                        rows={3}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowEditProfile(false)}
-                      className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Conditional Content Based on Active Section */}
-          {activeSection === 'feeds' && (
-            <>
-              {/* Post Creation Form */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <form onSubmit={handlePostSubmit} className="space-y-4">
+  // Render section content
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case 'feeds':
+        return (
+          <div className="space-y-6">
+            {/* Create Post Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+              <div className="flex items-start space-x-4">
+                <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
+                  {userProfile.displayName.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
                   <textarea
                     value={newPost}
                     onChange={(e) => setNewPost(e.target.value)}
-                    placeholder="Share your thoughts, achievements, or ask for help..."
-                    className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Share your thoughts, experiences, or achievements..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     rows={3}
                   />
-                  <div className="flex items-center justify-between">
-                    <div className="flex space-x-4">
-                      <label className="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-indigo-500">
-                        <ImageIcon className="w-5 h-5" />
-                        <span>Add Image</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={(e) => setSelectedImages(e.target.files)}
-                        />
-                      </label>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <button className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                        <ImageIcon className="h-5 w-5" />
+                      </button>
+                      <button className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                        <Smile className="h-5 w-5" />
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    <button 
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium flex items-center space-x-2"
                     >
-                      Post
+                      <Send className="h-4 w-4" />
+                      <span>Post</span>
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
+            </div>
 
-              {/* Feed Content */}
-              <div className="space-y-4 mt-6">
-                {getFilteredContent().map((feed) => (
-                  <div key={feed.id} className="bg-white rounded-lg shadow p-4">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <img
-                        src={feed.userAvatar}
+            {/* Feed Posts */}
+            <div className="space-y-6">
+              {feeds.map((feed) => (
+                <div key={feed.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  {/* Post Header */}
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center space-x-4">
+                      <img 
+                        src={feed.userAvatar} 
                         alt={feed.userName}
-                        className="w-10 h-10 rounded-full"
+                        className="h-12 w-12 rounded-full"
                       />
-                      <div>
-                        <h3 className="font-semibold">{feed.userName}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(feed.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-800 mb-4">{feed.content}</p>
-                    
-                    {feed.images.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        {feed.images.map((image, index) => (
-                          <img
-                            key={index}
-                            src={image}
-                            alt={`Post image ${index + 1}`}
-                            className="rounded-lg w-full h-48 object-cover"
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {feed.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {feed.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between border-t pt-4">
-                      <button
-                        onClick={() => handleLike(feed.id)}
-                        className={`flex items-center space-x-2 ${
-                          feed.likedBy.includes(user?.uid || '') ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600'
-                        }`}
-                      >
-                        <ThumbsUp className="w-5 h-5" />
-                        <span>{feed.likes}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleOpenCommentsModal(feed)}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        <span>{feed.comments}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleOpenShareModal(feed)}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600"
-                      >
-                        <Share2 className="w-5 h-5" />
-                        <span>{feed.shares}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleBookmark(feed.id)}
-                        className={`flex items-center space-x-2 ${
-                          feed.isBookmarked ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600'
-                        }`}
-                      >
-                        <Bookmark className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {activeSection === 'conversations' && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold mb-6">Conversations</h2>
-              <div className="bg-white rounded-lg shadow divide-y">
-                {[
-                  {
-                    id: '1',
-                    name: 'Sarah Chen',
-                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-                    lastMessage: 'Hey, I saw your post about the ML project. Would love to collaborate!',
-                    time: '2 min ago',
-                    unread: true
-                  },
-                  {
-                    id: '2',
-                    name: 'Alex Kumar',
-                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-                    lastMessage: 'The AI workshop was amazing! Thanks for recommending it.',
-                    time: '1 hour ago',
-                    unread: false
-                  },
-                  {
-                    id: '3',
-                    name: 'Maria Garcia',
-                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-                    lastMessage: 'Can you share those research papers we discussed?',
-                    time: '2 hours ago',
-                    unread: true
-                  }
-                ].map(chat => (
-                  <div key={chat.id} className="p-4 hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-center space-x-4">
-                      <img src={chat.avatar} alt={chat.name} className="w-12 h-12 rounded-full" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-gray-900">{chat.name}</p>
-                          <p className="text-sm text-gray-500">{chat.time}</p>
-                        </div>
-                        <p className={`text-sm truncate ${chat.unread ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                          {chat.lastMessage}
+                        <h3 className="text-base font-semibold text-gray-900">{feed.userName}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(feed.createdAt).toLocaleDateString('en-US', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
                         </p>
                       </div>
-                      {chat.unread && (
-                        <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
-                      )}
                     </div>
+                    <p className="mt-4 text-gray-600">{feed.content}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {activeSection === 'groups' && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold mb-6">Groups</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  {
-                    id: '1',
-                    name: 'AI/ML Research Group',
-                    members: 128,
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=AI',
-                    active: true
-                  },
-                  {
-                    id: '2',
-                    name: 'Web Development Hub',
-                    members: 95,
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Web',
-                    active: true
-                  },
-                  {
-                    id: '3',
-                    name: 'Robotics Club',
-                    members: 76,
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Robotics',
-                    active: false
-                  },
-                  {
-                    id: '4',
-                    name: 'Competitive Programming',
-                    members: 152,
-                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=CP',
-                    active: true
-                  }
-                ].map(group => (
-                  <div key={group.id} className="bg-white rounded-lg shadow p-4">
-                    <div className="flex items-center space-x-4">
-                      <img src={group.avatar} alt={group.name} className="w-16 h-16 rounded-lg" />
-                      <div>
-                        <h3 className="font-semibold text-lg">{group.name}</h3>
-                        <p className="text-gray-500">{group.members} members</p>
-                        <div className="flex items-center mt-2">
-                          <div className={`w-2 h-2 rounded-full ${group.active ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span className="ml-2 text-sm text-gray-500">{group.active ? 'Active now' : 'Inactive'}</span>
-                        </div>
-                      </div>
+                  {/* Post Images */}
+                  {feed.images.length > 0 && (
+                    <div className="grid grid-cols-2 gap-1">
+                      {feed.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`Post image ${index + 1}`}
+                          className="w-full h-64 object-cover"
+                        />
+                      ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  )}
 
-          {activeSection === 'career-guidance' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6">Career Guidance AI</h2>
-              
-              {/* Career Assessment */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">Personalized Career Path Assessment</h3>
-                <p className="text-gray-600 mb-4">
-                  Take our AI-powered assessment to discover career paths that match your skills, interests, and goals.
-                </p>
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                  Start Assessment
-                </button>
-              </div>
-
-              {/* Industry Insights */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">Industry Insights</h3>
-                <div className="space-y-4">
-                  {[
-                    {
-                      title: 'Machine Learning Engineer',
-                      growth: '25%',
-                      demand: 'High',
-                      skills: ['Python', 'TensorFlow', 'Data Analysis']
-                    },
-                    {
-                      title: 'Full Stack Developer',
-                      growth: '22%',
-                      demand: 'Very High',
-                      skills: ['JavaScript', 'React', 'Node.js']
-                    },
-                    {
-                      title: 'Cloud Architect',
-                      growth: '20%',
-                      demand: 'High',
-                      skills: ['AWS', 'Azure', 'DevOps']
-                    }
-                  ].map((career, index) => (
-                    <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-medium">{career.title}</h4>
-                        <span className="text-green-600">+{career.growth} growth</span>
+                  {/* Post Actions */}
+                  <div className="px-6 py-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-6">
+                        <button
+                          onClick={() => handleLike(feed.id)}
+                          className={`flex items-center space-x-2 ${
+                            feed.likedBy.includes(currentUser?.uid || '')
+                              ? 'text-indigo-600'
+                              : 'text-gray-500 hover:text-indigo-600'
+                          }`}
+                        >
+                          <ThumbsUp className="h-5 w-5" />
+                          <span>{feed.likes}</span>
+                        </button>
+                        <button
+                          onClick={() => setShowComments({ ...showComments, [feed.id]: !showComments[feed.id] })}
+                          className="flex items-center space-x-2 text-gray-500 hover:text-indigo-600"
+                        >
+                          <MessageCircle className="h-5 w-5" />
+                          <span>{feed.comments}</span>
+                        </button>
+                        <button
+                          onClick={() => handleShare(feed.id)}
+                          className="flex items-center space-x-2 text-gray-500 hover:text-indigo-600"
+                        >
+                          <Share2 className="h-5 w-5" />
+                          <span>{feed.shares}</span>
+                        </button>
+                        <button
+                          onClick={() => handleBookmark(feed.id)}
+                          className={`flex items-center space-x-2 ${
+                            feed.isBookmarked
+                              ? 'text-indigo-600'
+                              : 'text-gray-500 hover:text-indigo-600'
+                          }`}
+                        >
+                          <BookmarkIcon className="h-5 w-5" />
+                        </button>
                       </div>
-                      <p className="text-sm text-gray-500">Demand: {career.demand}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {career.skills.map((skill, i) => (
-                          <span key={i} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Resume Builder */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">AI Resume Builder</h3>
-                <p className="text-gray-600 mb-4">
-                  Create a professional resume tailored to your target role with our AI-powered builder.
-                </p>
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                  Build Resume
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'learn' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6">Learn with AI</h2>
-              
-              {/* Personalized Learning Paths */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">Your Learning Path</h3>
-                <div className="space-y-4">
-                  {[
-                    {
-                      title: 'Machine Learning Fundamentals',
-                      progress: 75,
-                      nextTopic: 'Neural Networks',
-                      timeLeft: '2 hours'
-                    },
-                    {
-                      title: 'Web Development Bootcamp',
-                      progress: 45,
-                      nextTopic: 'React Hooks',
-                      timeLeft: '3 hours'
-                    },
-                    {
-                      title: 'Data Structures & Algorithms',
-                      progress: 60,
-                      nextTopic: 'Graph Algorithms',
-                      timeLeft: '1.5 hours'
-                    }
-                  ].map((course, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">{course.title}</h4>
-                        <span className="text-sm text-gray-500">{course.progress}% complete</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full"
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>Next: {course.nextTopic}</span>
-                        <span>{course.timeLeft} left</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Study Assistant */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">AI Study Assistant</h3>
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Ask anything about your courses</h4>
-                      <p className="text-sm text-gray-500">Get instant help with concepts, problems, or projects</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      placeholder="Ask a question..."
-                      className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                      Ask AI
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Tracking */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">Your Progress</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-indigo-600 mb-2">12</div>
-                    <div className="text-sm text-gray-500">Courses Completed</div>
-                  </div>
-                  <div className="border rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-indigo-600 mb-2">48</div>
-                    <div className="text-sm text-gray-500">Hours Learned</div>
-                  </div>
-                  <div className="border rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-indigo-600 mb-2">89%</div>
-                    <div className="text-sm text-gray-500">Average Score</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Modals */}
-      {showCommentsModal && selectedFeed && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Comments</h2>
-              <button 
-                onClick={handleCloseCommentsModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {selectedFeed.commentsList.map((comment) => (
-                <div key={comment.id} className="flex space-x-3">
-                  <img
-                    src={comment.userAvatar}
-                    alt={comment.userName}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <div className="bg-gray-100 rounded-lg p-3">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-medium">{comment.userName}</h4>
-                        <span className="text-sm text-gray-500">
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-gray-800">{comment.content}</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        );
 
-            <div className="p-4 border-t">
-              <div className="flex space-x-3">
-                <img
-                  src={user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.uid}`}
-                  alt={userProfile.displayName}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1 flex space-x-2">
-                  <input
-                    type="text"
-                    value={comments[selectedFeed.id] || ''}
-                    onChange={(e) => setComments({ ...comments, [selectedFeed.id]: e.target.value })}
-                    placeholder="Write a comment..."
-                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleComment(selectedFeed.id);
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => handleComment(selectedFeed.id)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    Comment
-                  </button>
+      case 'bookmarks':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Bookmarked Posts</h2>
+            {bookmarkedFeeds.length > 0 ? (
+              bookmarkedFeeds.map((feed) => (
+                // Render bookmarked posts similar to regular feeds
+                <div key={feed.id} className="bg-white rounded-lg shadow p-6">
+                  {/* Post content */}
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center space-x-4">
+                      <img 
+                        src={feed.userAvatar} 
+                        alt={feed.userName}
+                        className="h-12 w-12 rounded-full"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-semibold text-gray-900">{feed.userName}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(feed.createdAt).toLocaleDateString('en-US', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-gray-600">{feed.content}</p>
+                  </div>
+
+                  {/* Post Images */}
+                  {feed.images.length > 0 && (
+                    <div className="grid grid-cols-2 gap-1">
+                      {feed.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`Post image ${index + 1}`}
+                          className="w-full h-64 object-cover"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Post Actions */}
+                  <div className="px-6 py-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-6">
+                        <button className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-colors">
+                          <ThumbsUp className="h-5 w-5" />
+                          <span>{feed.likes}</span>
+                        </button>
+                        <button 
+                          onClick={() => handleOpenCommentsModal(feed)}
+                          className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-colors"
+                        >
+                          <MessageCircle className="h-5 w-5" />
+                          <span>{feed.comments}</span>
+                        </button>
+                        <button 
+                          onClick={() => handleOpenShareModal(feed)}
+                          className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-colors"
+                        >
+                          <Share2 className="h-5 w-5" />
+                          <span>{feed.shares}</span>
+                        </button>
+                      </div>
+                      <button 
+                        className={`text-gray-600 hover:text-indigo-600 transition-colors
+                          ${feed.isBookmarked ? 'text-indigo-600' : ''}`}
+                      >
+                        <BookmarkIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 bg-white rounded-lg shadow">
+                <BookmarkIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">No bookmarks yet</h3>
+                <p className="mt-1 text-sm text-gray-500">Start bookmarking posts you'd like to read later.</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'events':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Starred Events</h2>
+            {starredEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {starredEvents.map((event) => (
+                  <div key={event.id} className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{event.date}</p>
+                      </div>
+                      <button
+                        onClick={() => handleUnstarEvent(event.id)}
+                        className="text-yellow-500 hover:text-yellow-600"
+                      >
+                        <Star className="h-5 w-5 fill-current" />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-gray-600">{event.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-white rounded-lg shadow">
+                <Star className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">No starred events</h3>
+                <p className="mt-1 text-sm text-gray-500">Star events you're interested in to keep track of them.</p>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar - Profile */}
+          <div className="lg:w-80 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
+              {/* Profile Section */}
+              <div className="text-center mb-6">
+                <div className="inline-block rounded-full bg-indigo-600 p-6 mb-4">
+                  <span className="text-3xl font-bold text-white">
+                    {userProfile.displayName.charAt(0)}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">{userProfile.displayName}</h2>
+                <p className="text-gray-500 text-sm">{userProfile.university}</p>
+                <button
+                  onClick={handleEditProfile}
+                  className="mt-4 w-full bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors"
+                >
+                  Edit Profile
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="space-y-2">
+                <button
+                  onClick={() => handleNavigation('feeds')}
+                  className={`flex w-full items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeSection === 'feeds'
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <BookmarkIcon className="h-5 w-5" />
+                  <span>My Feeds & Bookmarks</span>
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('events')}
+                  className={`flex w-full items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeSection === 'events'
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Star className="h-5 w-5" />
+                  <span>Starred Events</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-grow">
+            {renderSectionContent()}
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="w-full lg:w-96 space-y-6">
+            {/* Messages Section */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Messages</h2>
+              <ConversationsList
+                onSelectConversation={(conversation) => {
+                  setSelectedConversation(conversation);
+                  setShowChatModal(true);
+                }}
+              />
+            </div>
+
+            {/* Trending Topics */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Trending Topics</h3>
+              <div className="space-y-4">
+                {/* Add trending topics content */}
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {showShareModal && selectedFeed && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Share Post</h2>
-              <button 
-                onClick={() => setShowShareModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={() => handleShare('twitter')}
-                className="w-full p-3 flex items-center space-x-3 rounded-lg hover:bg-gray-100"
-              >
-                <span className="text-blue-400">Twitter</span>
-              </button>
-              <button
-                onClick={() => handleShare('linkedin')}
-                className="w-full p-3 flex items-center space-x-3 rounded-lg hover:bg-gray-100"
-              >
-                <span className="text-blue-500">LinkedIn</span>
-              </button>
-              <button
-                onClick={() => handleShare('facebook')}
-                className="w-full p-3 flex items-center space-x-3 rounded-lg hover:bg-gray-100"
-              >
-                <span className="text-blue-600">Facebook</span>
-              </button>
-              <button
-                onClick={() => handleShare('copy')}
-                className="w-full p-3 flex items-center space-x-3 rounded-lg hover:bg-gray-100"
-              >
-                <span className="text-gray-600">Copy Link</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Chat Modal */}
+      {selectedConversation && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={() => {
+            setShowChatModal(false);
+            setSelectedConversation(null);
+          }}
+          alumni={{
+            id: selectedConversation.id,
+            name: selectedConversation.user.name,
+            avatar: selectedConversation.user.avatar,
+            position: 'Alumni',
+            company: 'Tech Company'
+          }}
+        />
       )}
     </div>
   );

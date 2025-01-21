@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { FaGoogle } from 'react-icons/fa';
-import { Mail, Lock, User, Phone } from 'lucide-react';
+import { Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 type UserType = 'student' | 'mentor' | 'alumni';
@@ -65,8 +65,8 @@ const RegisterForm = () => {
         userType: formData.userType
       });
       navigate('/home');
-    } catch (error) {
-      setError('Registration failed. Please try again.');
+    } catch (error: any) {
+      setError(error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

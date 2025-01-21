@@ -1,0 +1,65 @@
+{
+  "short_name": "AlumNet",
+  "name": "AlumNet - Alumni Network",
+  "description": "Connect with fellow alumni, share experiences, and grow together",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "prefer_related_applications": false,
+  "categories": ["education", "social", "networking"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "AlumNet Home Screen"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Alumni Directory"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "url": "/home",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Events",
+      "url": "/events",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "scope": "/",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
+}

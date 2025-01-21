@@ -8,9 +8,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile as updateFirebaseProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 type UserType = 'student' | 'mentor' | 'alumni';
@@ -24,6 +24,17 @@ interface UserData {
   userType: UserType;
   createdAt: Date;
   updatedAt: Date;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  company?: string;
+  position?: string;
+  website?: string;
+  social?: {
+    linkedin?: string;
+    twitter?: string;
+    github?: string;
+  };
 }
 
 interface AuthContextType {
@@ -42,6 +53,7 @@ interface AuthContextType {
   }) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateUserProfile: (data: Partial<UserData>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -100,10 +112,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userType: UserType;
   }) => {
     try {
+      // Validate input
+      if (!email || !password || !firstName || !lastName || !phoneNumber || !userType) {
+        throw new Error('All fields are required');
+      }
+      
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      // Create user
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update user profile
-      await updateProfile(user, {
+      await updateFirebaseProfile(user, {
         displayName: `${firstName} ${lastName}`
       });
 
@@ -127,7 +149,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setUserData(userData);
     } catch (error: any) {
-      throw new Error(error.message);
+      console.error('Registration error:', error);
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('This email is already registered. Please try logging in instead.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Please enter a valid email address.');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        throw new Error('Email/password registration is not enabled. Please contact support.');
+      } else if (error.code === 'auth/weak-password') {
+        throw new Error('Please choose a stronger password (at least 6 characters).');
+      } else {
+        throw new Error(error.message || 'Failed to register. Please try again.');
+      }
     }
   };
 
@@ -191,6 +226,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (data: Partial<UserData>) => {
+    if (!currentUser) throw new Error('No user logged in');
+
+    try {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      
+      // Update Firestore
+      await updateDoc(userDocRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      });
+
+      // Update display name if provided
+      if (data.firstName || data.lastName) {
+        const newDisplayName = `${data.firstName || userData?.firstName} ${data.lastName || userData?.lastName}`;
+        await updateFirebaseProfile(currentUser, {
+          displayName: newDisplayName
+        });
+      }
+
+      // Update local state
+      if (userData) {
+        setUserData({
+          ...userData,
+          ...data,
+          updatedAt: new Date()
+        });
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      throw new Error(error.message || 'Failed to update profile');
+    }
+  };
+
   const value = {
     currentUser,
     userData,
@@ -199,7 +268,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginWithGoogle,
     register,
     logout,
-    resetPassword
+    resetPassword,
+    updateUserProfile
   };
 
   return (

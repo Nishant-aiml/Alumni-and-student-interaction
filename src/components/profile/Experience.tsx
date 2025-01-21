@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../../types/auth';
 import { Plus, Edit2, Trash2, Briefcase } from 'lucide-react';
 
-interface ExperienceProps {
-  experience: { company: string; position: string; duration: string }[];
-  isEditing: boolean;
-  onUpdate: (experience: { company: string; position: string; duration: string }[]) => void;
+interface Experience {
+  company: string;
+  position: string;
+  duration: string;
 }
 
-const Experience: React.FC<ExperienceProps> = ({ experience, isEditing, onUpdate }) => {
-  const [newExperience, setNewExperience] = useState({
+interface ExperienceProps {
+  experience?: Experience[];
+  isEditing: boolean;
+  onInputChange: (field: string, value: any) => void;
+}
+
+const Experience: React.FC<ExperienceProps> = ({ experience = [], isEditing, onInputChange }) => {
+  const [newExperience, setNewExperience] = useState<Experience>({
     company: '',
     position: '',
     duration: ''
@@ -17,25 +22,26 @@ const Experience: React.FC<ExperienceProps> = ({ experience, isEditing, onUpdate
 
   const handleAddExperience = () => {
     if (newExperience.company && newExperience.position) {
-      onUpdate([...experience, newExperience]);
+      const updatedExperience = [...experience, newExperience];
+      onInputChange('experience', updatedExperience);
       setNewExperience({ company: '', position: '', duration: '' });
     }
   };
 
   const handleRemoveExperience = (index: number) => {
-    onUpdate(experience.filter((_, i) => i !== index));
+    const updatedExperience = experience.filter((_, i) => i !== index);
+    onInputChange('experience', updatedExperience);
   };
 
-  const handleUpdateExperience = (index: number, field: string, value: string) => {
-    onUpdate(
-      experience.map((exp, i) =>
-        i === index ? { ...exp, [field]: value } : exp
-      )
+  const handleUpdateExperience = (index: number, field: keyof Experience, value: string) => {
+    const updatedExperience = experience.map((exp, i) =>
+      i === index ? { ...exp, [field]: value } : exp
     );
+    onInputChange('experience', updatedExperience);
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white shadow rounded-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Experience</h2>
         {isEditing && (
@@ -102,28 +108,37 @@ const Experience: React.FC<ExperienceProps> = ({ experience, isEditing, onUpdate
                   <div>
                     {isEditing ? (
                       <div className="space-y-4">
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={exp.company}
-                          onChange={(e) => handleUpdateExperience(index, 'company', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={exp.position}
-                          onChange={(e) => handleUpdateExperience(index, 'position', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={exp.duration}
-                          onChange={(e) => handleUpdateExperience(index, 'duration', e.target.value)}
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Company</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={exp.company}
+                            onChange={(e) => handleUpdateExperience(index, 'company', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Position</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={exp.position}
+                            onChange={(e) => handleUpdateExperience(index, 'position', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Duration</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={exp.duration}
+                            onChange={(e) => handleUpdateExperience(index, 'duration', e.target.value)}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <>
-                        <h4 className="text-lg font-medium text-gray-900">{exp.company}</h4>
+                        <h3 className="text-lg font-medium text-gray-900">{exp.company}</h3>
                         <p className="text-sm text-gray-600">{exp.position}</p>
                         <p className="text-sm text-gray-500">{exp.duration}</p>
                       </>
@@ -132,7 +147,7 @@ const Experience: React.FC<ExperienceProps> = ({ experience, isEditing, onUpdate
                   {isEditing && (
                     <button
                       onClick={() => handleRemoveExperience(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>

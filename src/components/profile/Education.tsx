@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../../types/auth';
 import { Plus, Edit2, Trash2, GraduationCap } from 'lucide-react';
 
-interface EducationProps {
-  education: { school: string; degree: string; year: string }[];
-  isEditing: boolean;
-  onUpdate: (education: { school: string; degree: string; year: string }[]) => void;
+interface Education {
+  school: string;
+  degree: string;
+  year: string;
 }
 
-const Education: React.FC<EducationProps> = ({ education, isEditing, onUpdate }) => {
-  const [newEducation, setNewEducation] = useState({
+interface EducationProps {
+  education?: Education[];
+  isEditing: boolean;
+  onInputChange: (field: string, value: any) => void;
+}
+
+const Education: React.FC<EducationProps> = ({ education = [], isEditing, onInputChange }) => {
+  const [newEducation, setNewEducation] = useState<Education>({
     school: '',
     degree: '',
     year: ''
@@ -17,25 +22,26 @@ const Education: React.FC<EducationProps> = ({ education, isEditing, onUpdate })
 
   const handleAddEducation = () => {
     if (newEducation.school && newEducation.degree) {
-      onUpdate([...education, newEducation]);
+      const updatedEducation = [...education, newEducation];
+      onInputChange('education', updatedEducation);
       setNewEducation({ school: '', degree: '', year: '' });
     }
   };
 
   const handleRemoveEducation = (index: number) => {
-    onUpdate(education.filter((_, i) => i !== index));
+    const updatedEducation = education.filter((_, i) => i !== index);
+    onInputChange('education', updatedEducation);
   };
 
-  const handleUpdateEducation = (index: number, field: string, value: string) => {
-    onUpdate(
-      education.map((edu, i) =>
-        i === index ? { ...edu, [field]: value } : edu
-      )
+  const handleUpdateEducation = (index: number, field: keyof Education, value: string) => {
+    const updatedEducation = education.map((edu, i) =>
+      i === index ? { ...edu, [field]: value } : edu
     );
+    onInputChange('education', updatedEducation);
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white shadow rounded-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Education</h2>
         {isEditing && (
@@ -102,28 +108,37 @@ const Education: React.FC<EducationProps> = ({ education, isEditing, onUpdate })
                   <div>
                     {isEditing ? (
                       <div className="space-y-4">
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={edu.school}
-                          onChange={(e) => handleUpdateEducation(index, 'school', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={edu.degree}
-                          onChange={(e) => handleUpdateEducation(index, 'degree', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                          value={edu.year}
-                          onChange={(e) => handleUpdateEducation(index, 'year', e.target.value)}
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">School/University</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={edu.school}
+                            onChange={(e) => handleUpdateEducation(index, 'school', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Degree</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={edu.degree}
+                            onChange={(e) => handleUpdateEducation(index, 'degree', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Year</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={edu.year}
+                            onChange={(e) => handleUpdateEducation(index, 'year', e.target.value)}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <>
-                        <h4 className="text-lg font-medium text-gray-900">{edu.school}</h4>
+                        <h3 className="text-lg font-medium text-gray-900">{edu.school}</h3>
                         <p className="text-sm text-gray-600">{edu.degree}</p>
                         <p className="text-sm text-gray-500">{edu.year}</p>
                       </>
@@ -132,7 +147,7 @@ const Education: React.FC<EducationProps> = ({ education, isEditing, onUpdate })
                   {isEditing && (
                     <button
                       onClick={() => handleRemoveEducation(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>

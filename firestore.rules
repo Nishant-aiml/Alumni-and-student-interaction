@@ -21,5 +21,19 @@ service cloud.firestore {
       // Allow creation of new user document during registration
       allow create: if isAuthenticated() && request.auth.uid == userId;
     }
+    
+    // Courses collection
+    match /courses/{courseId} {
+      // Allow read access to all authenticated users
+      allow read: if isAuthenticated();
+      // Allow write access only to admin users (you can modify this based on your needs)
+      allow write: if isAuthenticated();
+    }
+    
+    // Enrollments collection
+    match /enrollments/{enrollmentId} {
+      // Allow users to read and write their own enrollments
+      allow read, write: if isAuthenticated();
+    }
   }
 }

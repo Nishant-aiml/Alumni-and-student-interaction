@@ -1,108 +1,161 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../../types/auth';
-import { Search, Users, MessageCircle, UserPlus } from 'lucide-react';
+import { Users, MapPin, Briefcase, GraduationCap, Search } from 'lucide-react';
 
-interface ConnectionsProps {
-  profile: UserProfile;
-  isEditing?: boolean;
-  onUpdate?: (connections: any[]) => void;
+interface Connection {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+  batch: string;
+  branch: string;
+  company: string;
+  location: string;
+  isAlumni: boolean;
+  skills: string[];
+  mutualConnections: number;
 }
 
-const Connections: React.FC<ConnectionsProps> = ({ profile, isEditing, onUpdate }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const connections = profile?.connections || [];
+interface ConnectionsProps {
+  connections: Connection[];
+}
 
-  const filteredConnections = connections.filter((connection) =>
-    connection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    connection.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    connection.company?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const Connections: React.FC<ConnectionsProps> = ({ connections }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState('all'); // all, alumni, students
+
+  const filteredConnections = connections.filter(connection => {
+    const matchesSearch = 
+      connection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      connection.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      connection.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      connection.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesFilter =
+      filter === 'all' ||
+      (filter === 'alumni' && connection.isAlumni) ||
+      (filter === 'students' && !connection.isAlumni);
+
+    return matchesSearch && matchesFilter;
+  });
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Connections</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {connections.length} total connections
-          </p>
-        </div>
-        <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-          <Users className="h-4 w-4 mr-2" />
-          Find Connections
-        </button>
+    <div className="bg-white rounded-lg shadow">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900">Your Network</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Connect with alumni and students from your college
+        </p>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
+      {/* Search and Filters */}
+      <div className="p-6 border-b border-gray-200 space-y-4">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search connections..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           />
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-full text-sm font-medium ${
+              filter === 'all'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('alumni')}
+            className={`px-4 py-2 rounded-full text-sm font-medium ${
+              filter === 'alumni'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Alumni
+          </button>
+          <button
+            onClick={() => setFilter('students')}
+            className={`px-4 py-2 rounded-full text-sm font-medium ${
+              filter === 'students'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Students
+          </button>
         </div>
       </div>
 
       {/* Connections Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredConnections.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No connections found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchQuery ? 'Try adjusting your search' : 'Start connecting with other users'}
-            </p>
-            {!searchQuery && (
-              <div className="mt-6">
-                <button
-                  type="button"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <UserPlus className="h-5 w-5 mr-2" />
-                  Find Users
-                </button>
+      <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredConnections.map((connection) => (
+          <div
+            key={connection.id}
+            className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+          >
+            <div className="p-6">
+              <div className="flex items-center">
+                <img
+                  src={connection.avatar}
+                  alt={connection.name}
+                  className="w-16 h-16 rounded-full"
+                />
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {connection.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{connection.role}</p>
+                </div>
               </div>
-            )}
-          </div>
-        ) : (
-          filteredConnections.map((connection) => (
-            <div
-              key={connection.id}
-              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <img
-                    className="h-10 w-10 rounded-full"
-                    src={connection.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${connection.id}`}
-                    alt={connection.name}
-                  />
+
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center text-sm text-gray-500">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  {connection.company}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <a href="#" className="focus:outline-none">
-                    <p className="text-sm font-medium text-gray-900">{connection.name}</p>
-                    <p className="text-sm text-gray-500 truncate">{connection.role}</p>
-                    {connection.company && (
-                      <p className="text-sm text-gray-500 truncate">{connection.company}</p>
-                    )}
-                  </a>
+                <div className="flex items-center text-sm text-gray-500">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  {connection.location}
                 </div>
-                <button
-                  className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600"
-                  onClick={() => {/* Handle message click */}}
-                >
-                  <MessageCircle className="h-5 w-5" />
+                <div className="flex items-center text-sm text-gray-500">
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  {connection.branch} ({connection.batch})
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Users className="h-4 w-4 mr-2" />
+                  {connection.mutualConnections} mutual connections
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex flex-wrap gap-2">
+                  {connection.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                  Connect
                 </button>
               </div>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
     </div>
   );

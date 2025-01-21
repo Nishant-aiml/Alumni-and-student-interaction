@@ -1,23 +1,22 @@
 import React from 'react';
-import { UserProfile } from '../../types/auth';
 import { Mail, MapPin, Link, Linkedin, Twitter } from 'lucide-react';
 
 interface PersonalInfoProps {
-  profile: UserProfile;
+  profile: any;
   isEditing: boolean;
-  onUpdate: (field: keyof UserProfile, value: any) => void;
+  onInputChange: (field: string, value: any) => void;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdate }) => {
+const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onInputChange }) => {
   const handleSocialLinkChange = (platform: string, value: string) => {
-    onUpdate('socialLinks', {
-      ...profile.socialLinks,
+    onInputChange('social', {
+      ...(profile.social || {}),
       [platform]: value
     });
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white shadow rounded-lg">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
       <div className="space-y-6">
         {/* Basic Info */}
@@ -30,8 +29,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdat
                 <input
                   type="text"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  value={profile.firstName}
-                  onChange={(e) => onUpdate('firstName', e.target.value)}
+                  value={profile.firstName || ''}
+                  onChange={(e) => onInputChange('firstName', e.target.value)}
                 />
               ) : (
                 <p className="mt-1 text-sm text-gray-900">{profile.firstName}</p>
@@ -43,8 +42,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdat
                 <input
                   type="text"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  value={profile.lastName}
-                  onChange={(e) => onUpdate('lastName', e.target.value)}
+                  value={profile.lastName || ''}
+                  onChange={(e) => onInputChange('lastName', e.target.value)}
                 />
               ) : (
                 <p className="mt-1 text-sm text-gray-900">{profile.lastName}</p>
@@ -66,7 +65,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdat
                     type="text"
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     value={profile.location || ''}
-                    onChange={(e) => onUpdate('location', e.target.value)}
+                    onChange={(e) => onInputChange('location', e.target.value)}
                     placeholder="Enter your location"
                   />
                 </div>
@@ -88,11 +87,11 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdat
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               rows={4}
               value={profile.bio || ''}
-              onChange={(e) => onUpdate('bio', e.target.value)}
+              onChange={(e) => onInputChange('bio', e.target.value)}
               placeholder="Write something about yourself..."
             />
           ) : (
-            <p className="mt-1 text-sm text-gray-900">{profile.bio || 'No bio provided'}</p>
+            <p className="mt-1 text-sm text-gray-900 whitespace-pre-line">{profile.bio || 'No bio provided'}</p>
           )}
         </div>
 
@@ -101,91 +100,86 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile, isEditing, onUpdat
           <h3 className="text-lg font-medium text-gray-900 mb-2">Social Links</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center">
+              <label className="block text-sm font-medium text-gray-700">Website</label>
+              {isEditing ? (
+                <div className="mt-1 flex items-center">
+                  <Link className="h-5 w-5 text-gray-400 mr-2" />
+                  <input
+                    type="url"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    value={profile.website || ''}
+                    onChange={(e) => onInputChange('website', e.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </div>
+              ) : profile.website ? (
+                <a
+                  href={profile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 flex items-center text-indigo-600 hover:text-indigo-500"
+                >
+                  <Link className="h-5 w-5 mr-2" />
+                  {profile.website}
+                </a>
+              ) : (
+                <p className="mt-1 text-sm text-gray-500">No website provided</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
+              {isEditing ? (
+                <div className="mt-1 flex items-center">
                   <Linkedin className="h-5 w-5 text-gray-400 mr-2" />
-                  LinkedIn
+                  <input
+                    type="url"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    value={profile.social?.linkedin || ''}
+                    onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
+                    placeholder="https://linkedin.com/in/username"
+                  />
                 </div>
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  value={profile.socialLinks?.linkedin || ''}
-                  onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
-                  placeholder="LinkedIn profile URL"
-                />
-              ) : (
+              ) : profile.social?.linkedin ? (
                 <a
-                  href={profile.socialLinks?.linkedin}
+                  href={profile.social.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 text-sm text-indigo-600 hover:text-indigo-500"
+                  className="mt-1 flex items-center text-indigo-600 hover:text-indigo-500"
                 >
-                  {profile.socialLinks?.linkedin || 'Not provided'}
+                  <Linkedin className="h-5 w-5 mr-2" />
+                  {profile.social.linkedin}
                 </a>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center">
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                  </svg>
-                  GitHub
-                </div>
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  value={profile.socialLinks?.github || ''}
-                  onChange={(e) => handleSocialLinkChange('github', e.target.value)}
-                  placeholder="GitHub profile URL"
-                />
               ) : (
-                <a
-                  href={profile.socialLinks?.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  {profile.socialLinks?.github || 'Not provided'}
-                </a>
+                <p className="mt-1 text-sm text-gray-500">No LinkedIn profile provided</p>
               )}
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center">
+              <label className="block text-sm font-medium text-gray-700">Twitter</label>
+              {isEditing ? (
+                <div className="mt-1 flex items-center">
                   <Twitter className="h-5 w-5 text-gray-400 mr-2" />
-                  Twitter
+                  <input
+                    type="url"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    value={profile.social?.twitter || ''}
+                    onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                    placeholder="https://twitter.com/username"
+                  />
                 </div>
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  value={profile.socialLinks?.twitter || ''}
-                  onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
-                  placeholder="Twitter profile URL"
-                />
-              ) : (
+              ) : profile.social?.twitter ? (
                 <a
-                  href={profile.socialLinks?.twitter}
+                  href={profile.social.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 text-sm text-indigo-600 hover:text-indigo-500"
+                  className="mt-1 flex items-center text-indigo-600 hover:text-indigo-500"
                 >
-                  {profile.socialLinks?.twitter || 'Not provided'}
+                  <Twitter className="h-5 w-5 mr-2" />
+                  {profile.social.twitter}
                 </a>
+              ) : (
+                <p className="mt-1 text-sm text-gray-500">No Twitter profile provided</p>
               )}
             </div>
           </div>
