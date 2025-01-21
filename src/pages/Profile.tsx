@@ -339,25 +339,27 @@ const Profile = () => {
 
         {/* Profile Content */}
         <Tab.Group>
-          <Tab.List className="flex p-1 space-x-1 bg-white shadow rounded-lg">
-            {tabs.map((tab) => (
-              <Tab
-                key={tab.name}
-                className={({ selected }) =>
-                  `w-full py-2.5 text-sm leading-5 font-medium rounded-lg
-                  ${selected
-                    ? 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                  }`
-                }
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <tab.icon className="h-5 w-5" />
-                  <span>{tab.name}</span>
-                </div>
-              </Tab>
-            ))}
-          </Tab.List>
+          <div className="bg-white shadow rounded-lg overflow-x-auto">
+            <Tab.List className="flex min-w-max p-1 space-x-1">
+              {tabs.map((tab) => (
+                <Tab
+                  key={tab.name}
+                  className={({ selected }) =>
+                    `flex items-center py-2.5 px-3 text-sm leading-5 font-medium rounded-lg focus:outline-none focus:ring-2 ring-offset-2 ring-offset-indigo-400 ring-white ring-opacity-60
+                    ${
+                      selected
+                        ? 'bg-indigo-100 text-indigo-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <tab.icon className="h-5 w-5 mr-2" />
+                  <span className="hidden sm:inline">{tab.name}</span>
+                  <span className="sm:hidden">{tab.name.split(' ')[0]}</span>
+                </Tab>
+              ))}
+            </Tab.List>
+          </div>
           <Tab.Panels className="mt-6">
             <Tab.Panel>
               <PersonalInfo

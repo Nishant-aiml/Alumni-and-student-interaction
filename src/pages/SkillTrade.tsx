@@ -118,52 +118,62 @@ const SkillTrade = () => {
 
             {/* Tabs */}
             <Tab.Group>
-              <Tab.List className="flex space-x-4 border-b border-gray-200">
-                <Tab
-                  className={({ selected }) =>
-                    `${
-                      selected
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
-                  }
-                >
-                  Available Trades
-                </Tab>
-                <Tab
-                  className={({ selected }) =>
-                    `${
-                      selected
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
-                  }
-                >
-                  Skill Rankings
-                </Tab>
-                <Tab
-                  className={({ selected }) =>
-                    `${
-                      selected
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
-                  }
-                >
-                  Learning Paths
-                </Tab>
-                <Tab
-                  className={({ selected }) =>
-                    `${
-                      selected
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
-                  }
-                >
-                  Success Stories
-                </Tab>
-              </Tab.List>
+              <div className="border-b border-gray-200 overflow-x-auto">
+                <Tab.List className="flex space-x-4 min-w-max">
+                  <Tab
+                    className={({ selected }) =>
+                      `${
+                        selected
+                          ? 'border-indigo-500 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } flex items-center whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm`
+                    }
+                  >
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline">Available Trades</span>
+                    <span className="md:hidden">Trades</span>
+                  </Tab>
+                  <Tab
+                    className={({ selected }) =>
+                      `${
+                        selected
+                          ? 'border-indigo-500 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } flex items-center whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm`
+                    }
+                  >
+                    <BarChart className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline">Skill Rankings</span>
+                    <span className="md:hidden">Rankings</span>
+                  </Tab>
+                  <Tab
+                    className={({ selected }) =>
+                      `${
+                        selected
+                          ? 'border-indigo-500 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } flex items-center whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm`
+                    }
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline">Learning Paths</span>
+                    <span className="md:hidden">Learning</span>
+                  </Tab>
+                  <Tab
+                    className={({ selected }) =>
+                      `${
+                        selected
+                          ? 'border-indigo-500 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } flex items-center whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm`
+                    }
+                  >
+                    <Star className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline">Success Stories</span>
+                    <span className="md:hidden">Success</span>
+                  </Tab>
+                </Tab.List>
+              </div>
 
               <Tab.Panels className="mt-8">
                 {/* Available Trades */}
