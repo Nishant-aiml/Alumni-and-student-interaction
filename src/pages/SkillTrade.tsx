@@ -30,9 +30,9 @@ const SkillTrade = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-gray-900 pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+      <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="md:flex md:items-center md:justify-between">
             <div className="flex-1 min-w-0">
@@ -55,10 +55,10 @@ const SkillTrade = () => {
               </div>
             </div>
             <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-white text-gray-700 hover:bg-gray-50">
+              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-gray-800 text-white hover:bg-gray-700">
                 List a Skill
               </button>
-              <button className="inline-flex items-center px-4 py-2 border border-white rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700">
+              <button className="inline-flex items-center px-4 py-2 border border-white rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-800">
                 Find a Trade
               </button>
             </div>
@@ -78,40 +78,40 @@ const SkillTrade = () => {
           <div className="flex-1">
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="bg-gray-800 rounded-lg shadow-sm p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Active Trades</p>
-                    <p className="text-2xl font-semibold text-gray-900">28</p>
+                    <p className="text-sm text-gray-400">Active Trades</p>
+                    <p className="text-2xl font-semibold text-white">28</p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-blue-500" />
+                  <TrendingUp className="h-8 w-8 text-blue-400" />
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="bg-gray-800 rounded-lg shadow-sm p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Skills Learned</p>
-                    <p className="text-2xl font-semibold text-gray-900">15</p>
+                    <p className="text-sm text-gray-400">Skills Learned</p>
+                    <p className="text-2xl font-semibold text-white">15</p>
                   </div>
-                  <BookOpen className="h-8 w-8 text-green-500" />
+                  <BookOpen className="h-8 w-8 text-green-400" />
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="bg-gray-800 rounded-lg shadow-sm p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Rating</p>
-                    <p className="text-2xl font-semibold text-gray-900">4.8</p>
+                    <p className="text-sm text-gray-400">Rating</p>
+                    <p className="text-2xl font-semibold text-white">4.8</p>
                   </div>
-                  <Star className="h-8 w-8 text-yellow-500" />
+                  <Star className="h-8 w-8 text-yellow-400" />
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="bg-gray-800 rounded-lg shadow-sm p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Hours Traded</p>
-                    <p className="text-2xl font-semibold text-gray-900">120</p>
+                    <p className="text-sm text-gray-400">Hours Traded</p>
+                    <p className="text-2xl font-semibold text-white">120</p>
                   </div>
-                  <Clock className="h-8 w-8 text-purple-500" />
+                  <Clock className="h-8 w-8 text-purple-400" />
                 </div>
               </div>
             </div>

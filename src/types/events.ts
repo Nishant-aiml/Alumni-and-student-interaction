@@ -1,5 +1,5 @@
-export type EventType = 'workshop' | 'meetup' | 'seminar' | 'career_fair' | 'networking';
-export type EventFormat = 'in_person' | 'virtual' | 'hybrid';
+export type EventType = 'workshop' | 'seminar' | 'networking' | 'hackathon' | 'conference' | 'other';
+export type EventFormat = 'in-person' | 'virtual' | 'hybrid';
 export type EventStatus = 'upcoming' | 'ongoing' | 'past' | 'cancelled';
 export type RSVPStatus = 'attending' | 'maybe' | 'not_attending' | 'waitlist';
 
@@ -46,42 +46,23 @@ export interface EventRegistration {
 }
 
 export interface Event {
-  id: string;
+  id?: string;
   title: string;
   description: string;
-  type: EventType;
+  date: string;
+  time: string;
+  location: string;
   format: EventFormat;
-  status: EventStatus;
-  startDate: string;
-  endDate: string;
-  timezone: string;
-  venue: EventVenue;
-  coverImage: string;
-  capacity: number;
-  registeredCount: number;
-  waitlistCount: number;
-  speakers: EventSpeaker[];
-  sessions: EventSession[];
-  organizers: {
-    id: string;
-    name: string;
-    avatarUrl: string;
-  }[];
-  sponsors?: {
-    id: string;
-    name: string;
-    logoUrl: string;
-    website: string;
-    tier: 'platinum' | 'gold' | 'silver' | 'bronze';
-  }[];
+  type: EventType;
+  maxAttendees?: number;
+  registrationLink?: string;
+  imageUrl?: string;
   tags: string[];
-  requiredInfo: {
-    resume?: boolean;
-    portfolio?: boolean;
-    linkedin?: boolean;
-    dietaryPreferences?: boolean;
-    specialAccommodations?: boolean;
-  };
+  hostId: string;
+  hostName: string;
+  createdAt: Date;
+  status: EventStatus;
+  attendees: string[];
 }
 
 export interface EventFilters {
@@ -92,7 +73,6 @@ export interface EventFilters {
     start: string;
     end: string;
   };
-  location?: string;
   tags: string[];
 }
 

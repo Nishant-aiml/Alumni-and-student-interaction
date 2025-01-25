@@ -20,6 +20,7 @@ import Rewards from './pages/Rewards';
 import Jobs from './pages/Jobs';
 import Feeds from './pages/Feeds';
 import Resources from './pages/Resources';
+import ChatBot from './components/ChatBot';
 
 // Layout for authenticated pages
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
@@ -47,6 +48,7 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </div>
       </main>
+      <ChatBot />
       <InstallPrompt />
     </div>
   );

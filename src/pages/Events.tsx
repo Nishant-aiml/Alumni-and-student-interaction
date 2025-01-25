@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { 
   Calendar, MapPin, Users, Clock, Filter,
   ChevronLeft, ChevronRight, Search, Globe,
   Laptop, Users2
 } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import EventCalendar from '../components/events/EventCalendar';
 import EventCard from '../components/events/EventCard';
 import EventFilters from '../components/events/EventFilters';
 import EventRecommendations from '../components/events/EventRecommendations';
+import EventForm from '../components/events/EventForm';
 import { Event, EventFilters as EventFilterType } from '../types/events';
 
 const Events = () => {
+  const { currentUser } = useAuth();
   const [view, setView] = useState<'grid' | 'calendar'>('grid');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilterType>({
     search: '',
     types: [],
@@ -24,6 +31,29 @@ const Events = () => {
     },
     tags: [],
   });
+
+  const fetchMyEvents = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const eventsRef = collection(db, 'events');
+      const q = query(eventsRef, where('hostId', '==', currentUser.uid));
+      const querySnapshot = await getDocs(q);
+      
+      const events = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Event[];
+      
+      setMyEvents(events);
+    } catch (error) {
+      console.error('Error fetching my events:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyEvents();
+  }, [currentUser]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
@@ -47,7 +77,10 @@ const Events = () => {
               </div>
             </div>
             <div className="mt-4 flex md:mt-0 md:ml-4">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-white text-gray-700 hover:bg-gray-50">
+              <button 
+                onClick={() => setShowEventForm(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-white text-gray-700 hover:bg-gray-50"
+              >
                 Host an Event
               </button>
             </div>
@@ -65,6 +98,23 @@ const Events = () => {
 
           {/* Events Content */}
           <div className="flex-1">
+            {/* My Events Section */}
+            {myEvents.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">My Events</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {myEvents.map((event) => (
+                    <EventCard 
+                      key={event.id} 
+                      event={event}
+                      isOwner={true}
+                      onEventUpdated={fetchMyEvents}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Search and View Toggle */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="flex-1 relative">
@@ -127,17 +177,6 @@ const Events = () => {
                       } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
                     }
                   >
-                    My Events
-                  </Tab>
-                  <Tab
-                    className={({ selected }) =>
-                      `${
-                        selected
-                          ? 'border-indigo-500 text-indigo-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`
-                    }
-                  >
                     Recommended
                   </Tab>
                 </Tab.List>
@@ -157,15 +196,6 @@ const Events = () => {
                     )}
                   </Tab.Panel>
 
-                  {/* My Events */}
-                  <Tab.Panel>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <EventCard />
-                      <EventCard />
-                      {/* Add more EventCards */}
-                    </div>
-                  </Tab.Panel>
-
                   {/* Recommended Events */}
                   <Tab.Panel>
                     <EventRecommendations />
@@ -176,6 +206,16 @@ const Events = () => {
           </div>
         </div>
       </div>
+
+      {/* Event Form Modal */}
+      {showEventForm && (
+        <EventForm
+          onClose={() => setShowEventForm(false)}
+          onSuccess={() => {
+            fetchMyEvents();
+          }}
+        />
+      )}
     </div>
   );
 };

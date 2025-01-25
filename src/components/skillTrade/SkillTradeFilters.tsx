@@ -27,6 +27,7 @@ const SkillTradeFilters: React.FC<SkillTradeFiltersProps> = ({
     { value: 'intermediate', label: 'Intermediate' },
     { value: 'advanced', label: 'Advanced' },
     { value: 'expert', label: 'Expert' },
+    { value: 'super_expert', label: 'Super Expert' },
   ];
 
   const availabilityDays = [
